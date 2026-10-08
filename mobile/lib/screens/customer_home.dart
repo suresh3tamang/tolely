@@ -8,6 +8,7 @@ import '../i18n.dart';
 import '../models.dart';
 import 'book_screen.dart';
 import 'booking_detail_screen.dart';
+import '../push.dart';
 import 'common.dart';
 import 'profile_screen.dart';
 
@@ -72,7 +73,12 @@ class _CustomerHomeState extends State<CustomerHome> {
                           builder: (_) => BookScreen(service: s, profile: widget.profile),
                         ),
                       );
-                      if (booked == true) setState(() => _tab = 1);
+                      if (booked == true) {
+                        setState(() => _tab = 1);
+                        // Good moment to ask: they want to hear when a supplier accepts.
+                        // Wait for the screen change to finish before the system prompt.
+                        Future.delayed(const Duration(milliseconds: 800), () => Push.start(ask: true));
+                      }
                     },
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,

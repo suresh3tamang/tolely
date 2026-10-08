@@ -228,6 +228,19 @@ class _OnlineSwitchState extends State<_OnlineSwitch> {
   late bool _online = widget.supplier['online'] != false;
   bool _busy = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // Online suppliers need job alerts: ask once the screen has settled.
+    // (No prompt is shown if they already answered.)
+    if (_online) {
+      Future.delayed(
+        const Duration(seconds: 1),
+        () => Push.start(supplierServices: List<String>.from(widget.supplier['services'] ?? []), ask: true),
+      );
+    }
+  }
+
   Future<void> _set(bool online) async {
     setState(() {
       _online = online;
@@ -235,7 +248,10 @@ class _OnlineSwitchState extends State<_OnlineSwitch> {
     });
     try {
       await Api.setOnline(online);
-      await Push.start(supplierServices: online ? List<String>.from(widget.supplier['services'] ?? []) : const []);
+      await Push.start(
+        supplierServices: online ? List<String>.from(widget.supplier['services'] ?? []) : const [],
+        ask: online,
+      );
       widget.onChanged();
     } catch (e) {
       if (mounted) {

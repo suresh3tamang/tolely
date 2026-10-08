@@ -16,11 +16,16 @@ class Push {
   static StreamSubscription<RemoteMessage>? _messageSub;
   static Set<String> _topics = {};
 
-  static Future<void> start({List<String> supplierServices = const []}) async {
+  /// Registers this phone for notifications. Shows the system permission
+  /// prompt only when [ask] is true, so call it with `ask: true` at a moment
+  /// where the reason is clear (after a first booking, when going online).
+  /// Without [ask], it only continues if permission was already given.
+  static Future<void> start({List<String> supplierServices = const [], bool ask = false}) async {
     try {
       final fcm = FirebaseMessaging.instance;
-      final perm = await fcm.requestPermission();
-      if (perm.authorizationStatus == AuthorizationStatus.denied) return;
+      final perm = ask ? await fcm.requestPermission() : await fcm.getNotificationSettings();
+      final status = perm.authorizationStatus;
+      if (status != AuthorizationStatus.authorized && status != AuthorizationStatus.provisional) return;
 
       final token = await fcm.getToken();
       if (token != null) await Api.registerDevice(token);
