@@ -34,7 +34,10 @@ class _RoleGateState extends State<RoleGate> {
     return me;
   });
 
-  void _reload() => setState(() => _me = _load());
+  // Braces matter: setState's callback must not return the Future.
+  void _reload() => setState(() {
+    _me = _load();
+  });
 
   @override
   Widget build(BuildContext context) {

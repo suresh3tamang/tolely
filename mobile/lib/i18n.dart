@@ -114,6 +114,19 @@ const _strings = <String, Map<String, String>>{
   },
   'sharingLocation': {'en': 'Sharing your location with the customer', 'ne': 'ग्राहकसँग तपाईंको स्थान साझा हुँदैछ'},
   'bookAgain': {'en': 'Book again', 'ne': 'फेरि बुक गर्नुहोस्'},
+  'tagline': {'en': 'Trusted help from your own tole', 'ne': 'तपाईंकै टोलबाट भरपर्दो सेवा'},
+  'phoneHelp': {
+    'en': "We'll send a 6-digit code to verify it's you.",
+    'ne': 'तपाईं नै हो भनी पुष्टि गर्न ६ अंकको कोड पठाउनेछौं।',
+  },
+  'otpHelp': {'en': 'Enter the code we sent by SMS.', 'ne': 'SMS मा पठाइएको कोड लेख्नुहोस्।'},
+  'changeNumber': {'en': 'Change number', 'ne': 'नम्बर बदल्नुहोस्'},
+  'namaste': {'en': 'Namaste', 'ne': 'नमस्ते'},
+  'tipTitle': {'en': 'Clean your tank before monsoon', 'ne': 'मनसुन अघि ट्याङ्की सफा गर्नुहोस्'},
+  'tipBody': {
+    'en': 'Clean water starts with a clean tank. Book tank cleaning in a tap.',
+    'ne': 'सफा पानीको लागि सफा ट्याङ्की। एक ट्यापमै सफाई बुक गर्नुहोस्।',
+  },
   'serviceUnavailable': {'en': 'This service is not available right now.', 'ne': 'यो सेवा अहिले उपलब्ध छैन।'},
   'back': {'en': 'No', 'ne': 'होइन'},
 };

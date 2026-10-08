@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../i18n.dart';
+import '../theme.dart';
 import 'common.dart';
 
 /// Phone number + OTP login. Nepal numbers only (+977).
@@ -53,42 +55,126 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final codeStep = _verificationId != null;
+    final text = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(actions: const [LanguageButton()]),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            Center(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(22),
-                child: Image.asset('assets/icon/icon.png', width: 96, height: 96),
+      backgroundColor: Brand.deepBlue,
+      body: Column(
+        children: [
+          // Brand header
+          Expanded(
+            flex: 5,
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF0EA5E9), Brand.deepBlue],
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Column(
+                  children: [
+                    const Align(alignment: Alignment.topRight, child: LanguageButton()),
+                    const Spacer(),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(26),
+                        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 24, offset: Offset(0, 12))],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(26),
+                        child: Image.asset('assets/icon/icon.png', width: 96, height: 96),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      tr('appName'),
+                      style: text.headlineMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
+                    ),
+                    Text(
+                      tr('tagline'),
+                      textAlign: TextAlign.center,
+                      style: text.bodyLarge?.copyWith(color: Colors.white.withValues(alpha: 0.85)),
+                    ),
+                    const Spacer(),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(tr('appName'), textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 32),
-            Text(tr(codeStep ? 'otpTitle' : 'phoneTitle'), style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 12),
-            if (!codeStep)
-              TextField(
-                controller: _phone,
-                keyboardType: TextInputType.phone,
-                maxLength: 10,
-                decoration: InputDecoration(prefixText: '+977 ', hintText: tr('phoneHint')),
-              )
-            else
-              TextField(controller: _code, keyboardType: TextInputType.number, maxLength: 6),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: _busy ? null : (codeStep ? _verify : _sendCode),
-              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-              child: _busy
-                  ? const SizedBox.square(dimension: 22, child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(tr(codeStep ? 'verify' : 'sendCode')),
+          ),
+          // Form sheet
+          Expanded(
+            flex: 6,
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Brand.background,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                  children: [
+                    Text(tr(codeStep ? 'otpTitle' : 'phoneTitle'), style: text.titleLarge),
+                    const SizedBox(height: 6),
+                    Text(tr(codeStep ? 'otpHelp' : 'phoneHelp'), style: text.bodyMedium?.copyWith(color: Brand.muted)),
+                    const SizedBox(height: 20),
+                    if (!codeStep)
+                      TextField(
+                        controller: _phone,
+                        keyboardType: TextInputType.phone,
+                        autofocus: false,
+                        style: text.titleMedium?.copyWith(letterSpacing: 1),
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
+                        decoration: InputDecoration(
+                          hintText: tr('phoneHint'),
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.only(left: 16, right: 8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('🇳🇵', style: TextStyle(fontSize: 20)),
+                                const SizedBox(width: 6),
+                                Text('+977', style: text.titleMedium),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      TextField(
+                        controller: _code,
+                        keyboardType: TextInputType.number,
+                        autofocus: true,
+                        textAlign: TextAlign.center,
+                        style: text.headlineSmall?.copyWith(letterSpacing: 12),
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
+                        decoration: const InputDecoration(hintText: '••••••'),
+                      ),
+                    const SizedBox(height: 20),
+                    FilledButton(
+                      onPressed: _busy ? null : (codeStep ? _verify : _sendCode),
+                      child: _busy
+                          ? const SizedBox.square(
+                              dimension: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : Text(tr(codeStep ? 'verify' : 'sendCode')),
+                    ),
+                    if (codeStep)
+                      TextButton(
+                        onPressed: _busy ? null : () => setState(() => _verificationId = null),
+                        child: Text(tr('changeNumber')),
+                      ),
+                  ],
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

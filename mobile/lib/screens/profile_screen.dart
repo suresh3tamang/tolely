@@ -70,7 +70,9 @@ class _CustomerProfileState extends State<CustomerProfile> {
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
           child: Text(tr('save')),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
+        const LogoutButton(),
+        const SizedBox(height: 8),
         const DeleteAccountButton(),
       ],
     );
@@ -145,7 +147,9 @@ class SupplierProfile extends StatelessWidget {
           padding: const EdgeInsets.only(top: 4),
           child: Text(tr('supplierEditWarning'), style: Theme.of(context).textTheme.bodySmall),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
+        const LogoutButton(),
+        const SizedBox(height: 8),
         const DeleteAccountButton(),
       ],
     );

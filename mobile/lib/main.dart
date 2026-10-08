@@ -7,6 +7,7 @@ import 'config.dart';
 import 'firebase_options.dart';
 import 'i18n.dart';
 import 'push.dart';
+import 'theme.dart';
 import 'screens/login_screen.dart';
 import 'screens/role_gate.dart';
 
@@ -32,11 +33,7 @@ class TolelyApp extends StatelessWidget {
         title: 'Tolely',
         debugShowCheckedModeBanner: false,
         scaffoldMessengerKey: messengerKey,
-        theme: ThemeData(
-          colorSchemeSeed: const Color(0xFF0369A1),
-          useMaterial3: true,
-          inputDecorationTheme: const InputDecorationTheme(border: OutlineInputBorder()),
-        ),
+        theme: buildTheme(),
         home: StreamBuilder<User?>(
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snap) {
