@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0EA5E9"/>
+      <stop offset="1" stop-color="#075985"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="230" fill="url(#bg)"/>
+  <g id="mark">
+    <!-- map pin = your tole -->
+    <path d="M512 880 C 430 770, 242 620, 242 450 A 270 270 0 1 1 782 450 C 782 620, 594 770, 512 880 Z" fill="#FFFFFF"/>
+    <!-- house inside the pin -->
+    <path d="M512 318 L 668 448 L 630 448 L 630 590 L 394 590 L 394 448 L 356 448 Z"
+          fill="#0369A1" stroke="#0369A1" stroke-width="26" stroke-linejoin="round"/>
+    <!-- warm door -->
+    <rect x="482" y="500" width="60" height="90" rx="12" fill="#F59E0B"/>
+  </g>
+</svg>

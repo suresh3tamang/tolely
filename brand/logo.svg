@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" width="820" height="360">
+  <g transform="translate(20 20) scale(0.3125)">
+    <rect width="1024" height="1024" rx="230" fill="#0369A1"/>
+    <path d="M512 880 C 430 770, 242 620, 242 450 A 270 270 0 1 1 782 450 C 782 620, 594 770, 512 880 Z" fill="#FFFFFF"/>
+    <path d="M512 318 L 668 448 L 630 448 L 630 590 L 394 590 L 394 448 L 356 448 Z"
+          fill="#0369A1" stroke="#0369A1" stroke-width="26" stroke-linejoin="round"/>
+    <rect x="482" y="500" width="60" height="90" rx="12" fill="#F59E0B"/>
+  </g>
+  <text x="380" y="190" font-family="Helvetica Neue, Arial, sans-serif" font-size="150" font-weight="700" fill="#075985" letter-spacing="-3">Tolely</text>
+  <text x="384" y="290" font-family="Kohinoor Devanagari, Devanagari Sangam MN, Noto Sans Devanagari, sans-serif" font-size="74" font-weight="600" fill="#F59E0B">टोलेली</text>
+</svg>
