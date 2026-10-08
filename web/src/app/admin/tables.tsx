@@ -1,180 +1,281 @@
 "use client";
 
+import { CalendarCheck, Droplets, MapPin, MessageSquareWarning, Phone, Search, ShieldCheck, Star, Truck } from "lucide-react";
 import { useState } from "react";
 import type { Booking, Complaint, Supplier } from "./types";
-
-const STATUS_STYLE: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-800",
-  accepted: "bg-sky-100 text-sky-800",
-  on_the_way: "bg-indigo-100 text-indigo-800",
-  completed: "bg-emerald-100 text-emerald-800",
-  cancelled: "bg-zinc-200 text-zinc-700",
-};
+import { Avatar, Badge, Button, Card, EmptyState, StatusBadge, STATUS_LABELS, formatDate, inputClass, rupees } from "./ui";
 
 const OPEN = ["pending", "accepted", "on_the_way"];
+const th = "px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500";
+const td = "px-4 py-3.5 align-top";
 
-const th = "p-3 font-medium";
-const td = "p-3 align-top";
-const muted = "text-slate-500";
-
-function Empty({ cols, text }: { cols: number; text: string }) {
+function Filters({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
   return (
-    <tr>
-      <td className="p-6 text-slate-500" colSpan={cols}>{text}</td>
-    </tr>
+    <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4">
+      <div className="relative min-w-60 flex-1">
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+        <input value={value} onChange={(e) => onChange(e.target.value)} placeholder="Search…" className={`${inputClass} pl-9`} />
+      </div>
+      {children}
+    </div>
   );
 }
 
-export function BookingsTable({ bookings, onCancel }: { bookings: Booking[]; onCancel: (id: string) => void }) {
-  const [status, setStatus] = useState("all");
+function Tabs<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: { value: T; label: string; count?: number }[] }) {
+  return (
+    <div className="flex rounded-lg bg-slate-100 p-1">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          onClick={() => onChange(o.value)}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${value === o.value ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+        >
+          {o.label}
+          {o.count != null && <span className="ml-1.5 text-xs text-slate-400">{o.count}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function BookingsTable({ bookings, onCancel }: { bookings: Booking[]; onCancel: (b: Booking) => void }) {
+  const [status, setStatus] = useState("open");
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const rows = bookings.filter(
     (b) =>
       (status === "all" || (status === "open" ? OPEN.includes(b.status) : b.status === status)) &&
-      (!q || [b.customerName, b.customerPhone, b.supplierName, b.address, b.id].some((v) => v?.toLowerCase().includes(q))),
+      (!q || [b.customerName, b.customerPhone, b.supplierName, b.address, b.serviceNameEn, b.id].some((v) => v?.toLowerCase().includes(q))),
   );
 
   return (
-    <>
-      <div className="flex flex-wrap gap-2 border-b p-3">
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded border px-2 py-1.5 text-sm">
-          <option value="all">All statuses</option>
-          <option value="open">Open</option>
-          {Object.keys(STATUS_STYLE).map((s) => (
-            <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
-          ))}
+    <Card>
+      <Filters value={query} onChange={setQuery}>
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputClass.replace("w-full", "w-48")}>
+          <option value="open">Open bookings</option>
+          <option value="all">All bookings</option>
+          {Object.entries(STATUS_LABELS).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
         </select>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search name, phone, address, booking id"
-          className="min-w-64 flex-1 rounded border px-3 py-1.5 text-sm"
+      </Filters>
+      {rows.length ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50/60">
+              <tr>
+                <th className={th}>Service</th><th className={th}>Customer</th><th className={th}>When</th>
+                <th className={th}>Supplier</th><th className={th}>Amount</th><th className={th}>Status</th><th className={th}></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {rows.map((b) => (
+                <tr key={b.id} className="hover:bg-slate-50/60">
+                  <td className={td}>
+                    <p className="font-medium text-slate-900">{b.serviceNameEn}</p>
+                    <p className="text-slate-500">{b.optionLabelEn}</p>
+                    <p className="mt-0.5 font-mono text-[11px] text-slate-400">{b.id}</p>
+                  </td>
+                  <td className={td}>
+                    <div className="flex gap-3">
+                      <Avatar name={b.customerName} />
+                      <div className="min-w-0">
+                        <p className="font-medium text-slate-900">{b.customerName}</p>
+                        <p className="flex items-center gap-1 text-slate-500"><Phone className="size-3" />{b.customerPhone}</p>
+                        <p className="flex items-start gap-1 text-slate-500">
+                          <MapPin className="mt-0.5 size-3 shrink-0" />
+                          <span>{b.address}{b.landmark && ` · ${b.landmark}`}</span>
+                        </p>
+                        {b.note && <p className="mt-1 text-xs italic text-slate-500">“{b.note}”</p>}
+                      </div>
+                    </div>
+                  </td>
+                  <td className={`${td} whitespace-nowrap text-slate-700`}>{formatDate(b.scheduledFor)}</td>
+                  <td className={td}>
+                    {b.supplierName ? (
+                      <>
+                        <p className="font-medium text-slate-900">{b.supplierName}</p>
+                        <p className="text-slate-500">{b.supplierPhone}</p>
+                      </>
+                    ) : (
+                      <span className="text-slate-400">Not assigned</span>
+                    )}
+                  </td>
+                  <td className={`${td} whitespace-nowrap`}>
+                    <p className="font-medium text-slate-900">{rupees(b.price)}</p>
+                    <p className="text-xs text-slate-500">{b.paymentMethod === "qr" ? "QR payment" : "Cash"}</p>
+                  </td>
+                  <td className={td}>
+                    <StatusBadge status={b.status} />
+                    {b.rating != null && (
+                      <p className="mt-1.5 flex items-center gap-0.5 text-amber-500">
+                        {Array.from({ length: b.rating }, (_, i) => <Star key={i} className="size-3 fill-current" />)}
+                      </p>
+                    )}
+                  </td>
+                  <td className={`${td} text-right`}>
+                    {OPEN.includes(b.status) && (
+                      <Button variant="danger" size="sm" onClick={() => onCancel(b)}>Cancel</Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <EmptyState icon={CalendarCheck} title="No bookings found" text={bookings.length ? "Try a different filter or search." : "Bookings from the app will appear here."} />
+      )}
+    </Card>
+  );
+}
+
+export function SuppliersTable({ suppliers, onVerify }: { suppliers: Supplier[]; onVerify: (s: Supplier, verified: boolean) => void }) {
+  const [filter, setFilter] = useState<"waiting" | "verified" | "all">("waiting");
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const waiting = suppliers.filter((s) => !s.verified).length;
+  const rows = suppliers.filter(
+    (s) =>
+      (filter === "all" || (filter === "waiting" ? !s.verified : s.verified)) &&
+      (!q || [s.name, s.phone, s.area, s.vehicleNo].some((v) => v?.toLowerCase().includes(q))),
+  );
+
+  return (
+    <Card>
+      <Filters value={query} onChange={setQuery}>
+        <Tabs
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: "waiting", label: "Waiting", count: waiting },
+            { value: "verified", label: "Verified", count: suppliers.length - waiting },
+            { value: "all", label: "All", count: suppliers.length },
+          ]}
+        />
+      </Filters>
+      {rows.length ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50/60">
+              <tr>
+                <th className={th}>Supplier</th><th className={th}>Services</th><th className={th}>Tanker details</th>
+                <th className={th}>Rating</th><th className={th}>Jobs</th><th className={th}></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {rows.map((s) => (
+                <tr key={s.uid} className="hover:bg-slate-50/60">
+                  <td className={td}>
+                    <div className="flex gap-3">
+                      <Avatar name={s.name} />
+                      <div>
+                        <p className="flex items-center gap-1.5 font-medium text-slate-900">
+                          {s.name}
+                          {s.verified && <ShieldCheck className="size-4 text-emerald-600" aria-label="Verified" />}
+                        </p>
+                        <p className="text-slate-500">{s.phone}</p>
+                        <p className="flex items-center gap-1 text-slate-500"><MapPin className="size-3" />{s.area}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className={td}>
+                    <div className="flex flex-wrap gap-1">
+                      {s.services.map((k) => <Badge key={k} className="bg-slate-50 text-slate-700 ring-slate-500/20">{k.replace(/_/g, " ")}</Badge>)}
+                    </div>
+                  </td>
+                  <td className={td}>
+                    {s.vehicleNo ? (
+                      <>
+                        <p className="flex items-center gap-1 font-medium text-slate-900"><Truck className="size-3.5" />{s.vehicleNo}</p>
+                        <p className="flex items-center gap-1 text-slate-500"><Droplets className="size-3.5" />{s.waterSource}</p>
+                      </>
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
+                  </td>
+                  <td className={td}>
+                    {s.ratingCount ? (
+                      <span className="flex items-center gap-1 font-medium text-slate-900">
+                        <Star className="size-4 fill-amber-400 text-amber-400" />
+                        {(s.ratingSum / s.ratingCount).toFixed(1)}
+                        <span className="font-normal text-slate-500">({s.ratingCount})</span>
+                      </span>
+                    ) : (
+                      <span className="text-slate-400">No ratings</span>
+                    )}
+                  </td>
+                  <td className={`${td} font-medium text-slate-900`}>{s.completedJobs}</td>
+                  <td className={`${td} text-right`}>
+                    {s.verified ? (
+                      <Button variant="danger" size="sm" onClick={() => onVerify(s, false)}>Suspend</Button>
+                    ) : (
+                      <Button variant="success" size="sm" icon={ShieldCheck} onClick={() => onVerify(s, true)}>Verify</Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <EmptyState
+          icon={Truck}
+          title={filter === "waiting" ? "No suppliers waiting" : "No suppliers found"}
+          text={filter === "waiting" ? "New supplier sign-ups from the app will appear here for verification." : undefined}
+        />
+      )}
+    </Card>
+  );
+}
+
+export function ComplaintsList({ complaints, onResolve }: { complaints: Complaint[]; onResolve: (c: Complaint) => void }) {
+  const [filter, setFilter] = useState<"open" | "resolved">("open");
+  const open = complaints.filter((c) => c.status === "open").length;
+  const rows = complaints.filter((c) => c.status === filter);
+
+  return (
+    <Card>
+      <div className="border-b border-slate-100 p-4">
+        <Tabs
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: "open", label: "Open", count: open },
+            { value: "resolved", label: "Resolved", count: complaints.length - open },
+          ]}
         />
       </div>
-      <table className="w-full text-left text-sm">
-        <thead className="border-b text-slate-500">
-          <tr>
-            <th className={th}>Service</th><th className={th}>Customer</th><th className={th}>Address</th>
-            <th className={th}>Scheduled</th><th className={th}>Supplier</th><th className={th}>Price</th>
-            <th className={th}>Status</th><th className={th}></th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((b) => (
-            <tr key={b.id} className="border-b last:border-0">
-              <td className={td}>{b.serviceNameEn}<div className={muted}>{b.optionLabelEn}</div></td>
-              <td className={td}>{b.customerName}<div className={muted}>{b.customerPhone}</div></td>
-              <td className={td}>
-                {b.address}
-                {b.landmark && <div className={muted}>{b.landmark}</div>}
-                {b.note && <div className="italic text-slate-500">“{b.note}”</div>}
-              </td>
-              <td className={td}>{new Date(b.scheduledFor).toLocaleString()}</td>
-              <td className={td}>{b.supplierName ?? "—"}<div className={muted}>{b.supplierPhone}</div></td>
-              <td className={td}>Rs {b.price.toLocaleString("en-IN")}<div className={muted}>{b.paymentMethod}</div></td>
-              <td className={td}>
-                <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs ${STATUS_STYLE[b.status]}`}>
-                  {b.status.replace(/_/g, " ")}
-                </span>
-                {b.rating != null && <div className="mt-1 text-amber-600">{"★".repeat(b.rating)}</div>}
-              </td>
-              <td className={`${td} text-right`}>
-                {OPEN.includes(b.status) && (
-                  <button onClick={() => onCancel(b.id)} className="rounded border border-red-300 px-2 py-1 text-red-700 hover:bg-red-50">
-                    Cancel
-                  </button>
+      {rows.length ? (
+        <ul className="divide-y divide-slate-100">
+          {rows.map((c) => (
+            <li key={c.id} className="flex flex-wrap items-start gap-4 p-5">
+              <span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${c.status === "open" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
+                <MessageSquareWarning className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="font-medium text-slate-900">{c.serviceNameEn}</span>
+                  <Badge className="bg-slate-50 text-slate-600 ring-slate-500/20">from {c.reporterRole}</Badge>
+                  <span className="text-slate-500">{c.reporterPhone} · {formatDate(c.createdAt)}</span>
+                </div>
+                <p className="mt-2 whitespace-pre-wrap text-slate-700">{c.message}</p>
+                <p className="mt-1 font-mono text-[11px] text-slate-400">Booking {c.bookingId}</p>
+                {c.resolution && (
+                  <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                    <strong>Resolved:</strong> {c.resolution}
+                  </p>
                 )}
-              </td>
-            </tr>
+              </div>
+              {c.status === "open" && <Button size="sm" onClick={() => onResolve(c)}>Mark resolved</Button>}
+            </li>
           ))}
-          {!rows.length && <Empty cols={8} text="No bookings match." />}
-        </tbody>
-      </table>
-    </>
-  );
-}
-
-export function SuppliersTable({
-  suppliers,
-  onVerify,
-}: {
-  suppliers: Supplier[];
-  onVerify: (uid: string, verified: boolean) => void;
-}) {
-  // Unverified first: they are waiting for us.
-  const rows = [...suppliers].sort((a, b) => Number(a.verified) - Number(b.verified));
-  return (
-    <table className="w-full text-left text-sm">
-      <thead className="border-b text-slate-500">
-        <tr>
-          <th className={th}>Name</th><th className={th}>Services</th><th className={th}>Area</th>
-          <th className={th}>Vehicle / source</th><th className={th}>Rating</th><th className={th}>Jobs</th>
-          <th className={th}></th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((s) => (
-          <tr key={s.uid} className="border-b last:border-0">
-            <td className={td}>
-              {s.name}
-              <div className={muted}>{s.phone}</div>
-              {!s.verified && <span className="mt-1 inline-block rounded bg-amber-100 px-1.5 text-xs text-amber-800">waiting</span>}
-            </td>
-            <td className={td}>{s.services.join(", ")}</td>
-            <td className={td}>{s.area}</td>
-            <td className={td}>{s.vehicleNo || "—"}<div className={muted}>{s.waterSource}</div></td>
-            <td className={td}>{s.ratingCount ? `${(s.ratingSum / s.ratingCount).toFixed(1)} ★ (${s.ratingCount})` : "—"}</td>
-            <td className={td}>{s.completedJobs}</td>
-            <td className={`${td} text-right`}>
-              {s.verified ? (
-                <button onClick={() => onVerify(s.uid, false)} className="rounded border border-red-300 px-3 py-1 text-red-700 hover:bg-red-50">
-                  Suspend
-                </button>
-              ) : (
-                <button onClick={() => onVerify(s.uid, true)} className="rounded bg-emerald-600 px-3 py-1 text-white hover:bg-emerald-700">
-                  Verify
-                </button>
-              )}
-            </td>
-          </tr>
-        ))}
-        {!rows.length && <Empty cols={7} text="No suppliers yet." />}
-      </tbody>
-    </table>
-  );
-}
-
-export function ComplaintsList({
-  complaints,
-  onResolve,
-}: {
-  complaints: Complaint[];
-  onResolve: (id: string) => void;
-}) {
-  const rows = [...complaints].sort((a, b) => Number(a.status === "resolved") - Number(b.status === "resolved"));
-  return (
-    <ul className="divide-y">
-      {rows.map((c) => (
-        <li key={c.id} className="flex flex-wrap items-start justify-between gap-4 p-4">
-          <div className="min-w-0 flex-1">
-            <p className="text-sm text-slate-500">
-              {c.serviceNameEn} · booking {c.bookingId} · from {c.reporterRole} {c.reporterPhone} ·{" "}
-              {new Date(c.createdAt).toLocaleString()}
-            </p>
-            <p className="mt-1 whitespace-pre-wrap">{c.message}</p>
-            {c.resolution && <p className="mt-2 text-sm text-emerald-700">Resolved: {c.resolution}</p>}
-          </div>
-          {c.status === "open" ? (
-            <button onClick={() => onResolve(c.id)} className="rounded bg-sky-700 px-3 py-1 text-sm text-white hover:bg-sky-800">
-              Resolve
-            </button>
-          ) : (
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800">resolved</span>
-          )}
-        </li>
-      ))}
-      {!rows.length && <li className="p-6 text-slate-500">No problem reports. 🎉</li>}
-    </ul>
+        </ul>
+      ) : (
+        <EmptyState
+          icon={MessageSquareWarning}
+          title={filter === "open" ? "No open problem reports" : "Nothing resolved yet"}
+          text={filter === "open" ? "Reports sent from the app will appear here." : undefined}
+        />
+      )}
+    </Card>
   );
 }

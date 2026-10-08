@@ -1,3 +1,7 @@
 .DS_Store
 .firebase/
 *-debug.log
+
+# Firebase service account keys: never commit
+service-account*.json
+*firebase-adminsdk*.json

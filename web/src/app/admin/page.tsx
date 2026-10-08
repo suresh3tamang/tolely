@@ -1,77 +1,74 @@
 "use client";
 
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User } from "firebase/auth";
+import { onAuthStateChanged, signOut, type User } from "firebase/auth";
+import { LoaderCircle } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, clientAuth } from "@/lib/firebase-client";
+import { Login } from "./login";
+import { OverviewPage } from "./overview";
 import { ServicesEditor } from "./services-editor";
+import { AdminShell, SECTIONS, type Section } from "./shell";
 import { BookingsTable, ComplaintsList, SuppliersTable } from "./tables";
-import type { Overview } from "./types";
+import type { Booking, Complaint, Overview, Supplier } from "./types";
+import { ActionDialog, Button, ToastProvider, useToast } from "./ui";
 
 export default function AdminPage() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
-
   useEffect(() => onAuthStateChanged(clientAuth(), setUser), []);
 
-  if (user === undefined) return <Shell>Loading…</Shell>;
+  if (user === undefined) return <FullScreenLoader />;
   if (!user) return <Login />;
-  return <Dashboard user={user} />;
-}
-
-function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto max-w-6xl px-4 py-8">{children}</div>
-    </main>
+    <ToastProvider>
+      <Dashboard user={user} />
+    </ToastProvider>
   );
 }
 
-function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    try {
-      await signInWithEmailAndPassword(clientAuth(), email, password);
-    } catch {
-      setError("Wrong email or password");
-    }
-  }
-
+function FullScreenLoader() {
   return (
-    <Shell>
-      <form onSubmit={submit} className="mx-auto mt-16 max-w-sm space-y-4 rounded-xl bg-white p-6 shadow">
-        <div className="flex items-center gap-3">
-          <Image src="/icon.svg" alt="" width={40} height={40} />
-          <h1 className="text-xl font-semibold">Tolely Admin</h1>
-        </div>
-        <input className="w-full rounded border px-3 py-2" type="email" placeholder="Email"
-          value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input className="w-full rounded border px-3 py-2" type="password" placeholder="Password"
-          value={password} onChange={(e) => setPassword(e.target.value)} required />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button className="w-full rounded bg-sky-700 py-2 font-medium text-white hover:bg-sky-800">Sign in</button>
-      </form>
-    </Shell>
+    <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <LoaderCircle className="size-6 animate-spin text-sky-700" />
+    </div>
   );
 }
 
-const TABS = ["bookings", "suppliers", "services", "complaints"] as const;
+type Dialog =
+  | { kind: "cancel"; booking: Booking }
+  | { kind: "verify"; supplier: Supplier; verified: boolean }
+  | { kind: "resolve"; complaint: Complaint };
 
 function Dashboard({ user }: { user: User }) {
   const [data, setData] = useState<Overview | null>(null);
+  const [loadedAt, setLoadedAt] = useState(0);
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<(typeof TABS)[number]>("bookings");
+  const [refreshing, setRefreshing] = useState(false);
+  const [section, setSection] = useState<Section>("overview");
+  const [dialog, setDialog] = useState<Dialog | null>(null);
+  const toast = useToast();
+
+  // Remember the open section in the URL so refresh keeps it.
+  useEffect(() => {
+    const fromHash = window.location.hash.slice(1) as Section;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- read once from the URL on load
+    if (SECTIONS.includes(fromHash)) setSection(fromHash);
+  }, []);
+  const go = (s: Section) => {
+    setSection(s);
+    history.replaceState(null, "", `#${s}`);
+  };
 
   const load = useCallback(async () => {
+    setRefreshing(true);
     try {
       setData(await apiFetch<Overview>("/api/admin/overview"));
+      setLoadedAt(Date.now());
       setError("");
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setRefreshing(false);
     }
   }, []);
 
@@ -80,91 +77,99 @@ function Dashboard({ user }: { user: User }) {
     load();
   }, [load]);
 
-  async function post(path: string, body?: object) {
+  async function post(path: string, body: object | undefined, success: string) {
     try {
       await apiFetch(path, { method: "POST", body: body ? JSON.stringify(body) : undefined });
+      toast("success", success);
       await load();
     } catch (e) {
-      setError((e as Error).message);
+      toast("error", (e as Error).message);
+      throw e;
     }
   }
 
-  function cancelBooking(id: string) {
-    if (confirm("Cancel this booking? The customer and supplier will be notified.")) {
-      post(`/api/admin/bookings/${id}/cancel`);
-    }
+  if (error === "Not allowed") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 p-6 text-center">
+        <Image src="/icon.svg" alt="" width={48} height={48} />
+        <h1 className="text-xl font-semibold text-slate-900">This account is not an admin</h1>
+        <p className="max-w-sm text-sm text-slate-500">{user.email} can&apos;t open the admin console. Sign in with an admin account.</p>
+        <Button variant="secondary" onClick={() => signOut(clientAuth())}>Sign out</Button>
+      </div>
+    );
   }
 
-  function resolveComplaint(id: string) {
-    const resolution = prompt("What was done to fix this?");
-    if (resolution?.trim()) post(`/api/admin/complaints/${id}/resolve`, { resolution });
-  }
-
-  const bookings = data?.bookings ?? [];
-  const suppliers = data?.suppliers ?? [];
-  const complaints = data?.complaints ?? [];
-  const completed = bookings.filter((b) => b.status === "completed");
-  const openComplaints = complaints.filter((c) => c.status === "open").length;
-  const stats = [
-    { label: "Waiting for supplier", value: bookings.filter((b) => b.status === "pending").length },
-    { label: "Completed jobs", value: completed.length },
-    { label: "Completed job value (NPR)", value: completed.reduce((sum, b) => sum + b.price, 0).toLocaleString("en-IN") },
-    { label: "Suppliers to verify", value: suppliers.filter((s) => !s.verified).length },
-    { label: "Open problem reports", value: openComplaints },
-  ];
+  const counts = data && {
+    suppliers: data.suppliers.filter((s) => !s.verified).length,
+    complaints: data.complaints.filter((c) => c.status === "open").length,
+    bookings: data.bookings.filter((b) => b.status === "pending").length,
+  };
 
   return (
-    <Shell>
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Image src="/icon.svg" alt="" width={36} height={36} />
-          <h1 className="text-2xl font-semibold">Tolely Admin</h1>
-        </div>
-        <div className="flex items-center gap-3 text-sm">
-          <span className="text-slate-500">{user.email}</span>
-          <button onClick={load} className="rounded border px-3 py-1 hover:bg-white">Refresh</button>
-          <button onClick={() => signOut(clientAuth())} className="rounded border px-3 py-1 hover:bg-white">
-            Sign out
-          </button>
-        </div>
-      </header>
+    <AdminShell
+      section={section}
+      onSection={go}
+      counts={counts ?? {}}
+      email={user.email}
+      onRefresh={load}
+      refreshing={refreshing}
+      onSignOut={() => signOut(clientAuth())}
+    >
+      {error && <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+      {!data ? (
+        <div className="flex justify-center py-24"><LoaderCircle className="size-6 animate-spin text-sky-700" /></div>
+      ) : section === "overview" ? (
+        <OverviewPage data={data} now={loadedAt} go={go} />
+      ) : section === "bookings" ? (
+        <BookingsTable bookings={data.bookings} onCancel={(booking) => setDialog({ kind: "cancel", booking })} />
+      ) : section === "suppliers" ? (
+        <SuppliersTable suppliers={data.suppliers} onVerify={(supplier, verified) => setDialog({ kind: "verify", supplier, verified })} />
+      ) : section === "services" ? (
+        <ServicesEditor services={data.services} onSaved={load} />
+      ) : (
+        <ComplaintsList complaints={data.complaints} onResolve={(complaint) => setDialog({ kind: "resolve", complaint })} />
+      )}
 
-      {error && <p className="mb-4 rounded bg-red-50 p-3 text-red-700">{error}</p>}
-
-      <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-500">{s.label}</p>
-            <p className="mt-1 text-2xl font-semibold">{s.value}</p>
-          </div>
-        ))}
-      </section>
-
-      <nav className="mb-4 flex flex-wrap gap-2">
-        {TABS.map((t) => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`rounded-full px-4 py-1.5 text-sm capitalize ${tab === t ? "bg-sky-700 text-white" : "bg-white"}`}>
-            {t}
-            {t === "complaints" && openComplaints > 0 && (
-              <span className="ml-1.5 rounded-full bg-red-500 px-1.5 text-xs text-white">{openComplaints}</span>
-            )}
-          </button>
-        ))}
-      </nav>
-
-      <div className="overflow-x-auto rounded-xl bg-white shadow-sm">
-        {!data ? (
-          <p className="p-6 text-slate-500">Loading…</p>
-        ) : tab === "bookings" ? (
-          <BookingsTable bookings={bookings} onCancel={cancelBooking} />
-        ) : tab === "suppliers" ? (
-          <SuppliersTable suppliers={suppliers} onVerify={(uid, verified) => post(`/api/admin/suppliers/${uid}/verify`, { verified })} />
-        ) : tab === "services" ? (
-          <ServicesEditor services={data.services} onSaved={load} />
-        ) : (
-          <ComplaintsList complaints={complaints} onResolve={resolveComplaint} />
-        )}
-      </div>
-    </Shell>
+      {dialog?.kind === "cancel" && (
+        <ActionDialog
+          title="Cancel booking?"
+          message={`${dialog.booking.serviceNameEn} for ${dialog.booking.customerName}. The customer${dialog.booking.supplierName ? " and supplier" : ""} will be notified.`}
+          confirmLabel="Cancel booking"
+          danger
+          onConfirm={() => post(`/api/admin/bookings/${dialog.booking.id}/cancel`, undefined, "Booking cancelled")}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog?.kind === "verify" && (
+        <ActionDialog
+          title={dialog.verified ? `Verify ${dialog.supplier.name}?` : `Suspend ${dialog.supplier.name}?`}
+          message={
+            dialog.verified
+              ? "Only verify after checking their citizenship card and, for tankers, the vehicle bluebook and water source. They will start getting jobs right away."
+              : "They will stop getting new jobs until you verify them again."
+          }
+          confirmLabel={dialog.verified ? "Verify supplier" : "Suspend"}
+          danger={!dialog.verified}
+          onConfirm={() =>
+            post(
+              `/api/admin/suppliers/${dialog.supplier.uid}/verify`,
+              { verified: dialog.verified },
+              dialog.verified ? `${dialog.supplier.name} verified` : `${dialog.supplier.name} suspended`,
+            )
+          }
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog?.kind === "resolve" && (
+        <ActionDialog
+          title="Resolve problem report"
+          message="Write what was done, for example “Called customer, supplier refunded Rs 500”."
+          confirmLabel="Mark resolved"
+          input={{ placeholder: "What was done?" }}
+          onConfirm={(resolution) => post(`/api/admin/complaints/${dialog.complaint.id}/resolve`, { resolution }, "Report resolved")}
+          onClose={() => setDialog(null)}
+        />
+      )}
+    </AdminShell>
   );
 }

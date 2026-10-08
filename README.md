@@ -91,6 +91,15 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
 Deploy `web/` to Vercel (or any Node host) with the same environment variables as `.env.local`.
 Then build the app with `--dart-define=API_BASE_URL=https://your-domain`.
 
+## Test logins
+Firebase test phone numbers (no SMS is sent). **Remove them before public launch**
+in Firebase → Authentication → Sign-in method → Phone.
+
+| Number | Code | Use as |
+|---|---|---|
+| 9800000001 | 111111 | customer |
+| 9800000002 | 222222 | supplier |
+
 ## Adding a new service
 In `/admin` → **Services** → **New service**: set a name, icon and prices, and switch it on.
 Customers see it in the app within a few minutes. The default catalog is in
