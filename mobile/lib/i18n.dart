@@ -92,6 +92,29 @@ const _strings = <String, Map<String, String>>{
   'customer': {'en': 'Customer', 'ne': 'ग्राहक'},
   'supplier': {'en': 'Supplier', 'ne': 'सप्लायर'},
   'confirm': {'en': 'Yes', 'ne': 'हो'},
+  'pinLocation': {'en': 'Pin your location', 'ne': 'आफ्नो स्थान पिन गर्नुहोस्'},
+  'pinHelp': {'en': 'Move the map so the pin is on your house', 'ne': 'पिन तपाईंको घरमा पर्ने गरी नक्सा सार्नुहोस्'},
+  'confirmLocation': {'en': 'Use this location', 'ne': 'यो स्थान प्रयोग गर्नुहोस्'},
+  'locationOff': {
+    'en': 'Could not get your location. Move the map by hand.',
+    'ne': 'स्थान पाउन सकिएन। नक्सा आफैं सार्नुहोस्।',
+  },
+  'locationPinned': {'en': 'Location pinned on map', 'ne': 'नक्सामा स्थान पिन गरियो'},
+  'addMapPin': {
+    'en': 'Pin location on map (helps the supplier find you)',
+    'ne': 'नक्सामा स्थान पिन गर्नुहोस् (सप्लायरलाई सजिलो हुन्छ)',
+  },
+  'directions': {'en': 'Directions', 'ne': 'बाटो हेर्नुहोस्'},
+  'liveTracking': {'en': 'Live location of your supplier', 'ne': 'सप्लायरको लाइभ स्थान'},
+  'online': {'en': 'Online', 'ne': 'अनलाइन'},
+  'offline': {'en': 'Offline', 'ne': 'अफलाइन'},
+  'offlineHint': {
+    'en': 'You are offline. Go online to get new job alerts.',
+    'ne': 'तपाईं अफलाइन हुनुहुन्छ। नयाँ कामको सूचना पाउन अनलाइन हुनुहोस्।',
+  },
+  'sharingLocation': {'en': 'Sharing your location with the customer', 'ne': 'ग्राहकसँग तपाईंको स्थान साझा हुँदैछ'},
+  'bookAgain': {'en': 'Book again', 'ne': 'फेरि बुक गर्नुहोस्'},
+  'serviceUnavailable': {'en': 'This service is not available right now.', 'ne': 'यो सेवा अहिले उपलब्ध छैन।'},
   'back': {'en': 'No', 'ne': 'होइन'},
 };
 

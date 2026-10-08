@@ -13,3 +13,6 @@ export const SUPPLIER_TRANSITIONS: Partial<Record<BookingStatus, BookingStatus[]
 
 // A customer may cancel until the supplier is on the way.
 export const CUSTOMER_CANCELLABLE: BookingStatus[] = ["pending", "accepted"];
+
+// Rough bounding box of Nepal, to reject obviously wrong coordinates.
+export const NEPAL_BOUNDS = { minLat: 26.3, maxLat: 30.5, minLng: 80.0, maxLng: 88.3 };

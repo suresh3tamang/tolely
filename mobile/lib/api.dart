@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 
 import 'config.dart';
 import 'i18n.dart';
@@ -65,6 +66,7 @@ class Api {
     required DateTime scheduledFor,
     required String paymentMethod,
     required String note,
+    LatLng? location,
   }) => _send('POST', '/api/bookings', {
     'serviceKey': serviceKey,
     'optionId': optionId,
@@ -73,6 +75,7 @@ class Api {
     'scheduledFor': scheduledFor.toUtc().toIso8601String(),
     'paymentMethod': paymentMethod,
     'note': note,
+    'location': location == null ? null : {'lat': location.latitude, 'lng': location.longitude},
   });
 
   static Future<void> registerDevice(String token, {bool remove = false}) =>
@@ -83,6 +86,12 @@ class Api {
 
   static Future<void> reportProblem(String bookingId, String message) =>
       _send('POST', '/api/bookings/$bookingId/report', {'message': message});
+
+  /// Supplier's live position while on the way to the customer.
+  static Future<void> shareLocation(String bookingId, LatLng at) =>
+      _send('POST', '/api/bookings/$bookingId/location', {'lat': at.latitude, 'lng': at.longitude});
+
+  static Future<void> setOnline(bool online) => _send('POST', '/api/suppliers/availability', {'online': online});
 
   static Future<void> cancelBooking(String id) => _send('POST', '/api/bookings/$id/cancel');
 

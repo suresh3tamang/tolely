@@ -3,6 +3,7 @@ import { after } from "next/server";
 import { z } from "zod";
 import { ApiError, handle, parseBody, requireRole } from "@/lib/api";
 import { db } from "@/lib/firebase-admin";
+import { LatLngSchema } from "@/lib/geo";
 import { findOption } from "@/lib/catalog";
 import { messages } from "@/lib/messages";
 import { notifySuppliers } from "@/lib/notify";
@@ -17,6 +18,7 @@ const BookingSchema = z.object({
   scheduledFor: z.iso.datetime({ offset: true }),
   paymentMethod: z.enum(["cash", "qr"]).default("cash"),
   note: z.string().trim().max(500).default(""),
+  location: LatLngSchema.nullable().default(null),
 });
 
 /** Customer creates a booking. Price is decided here, never by the app. */
@@ -47,6 +49,7 @@ export const POST = handle(async (req: Request) => {
     address: body.address,
     landmark: body.landmark,
     note: body.note,
+    location: body.location,
     paymentMethod: body.paymentMethod,
     scheduledFor: Timestamp.fromMillis(when),
     status: "pending",

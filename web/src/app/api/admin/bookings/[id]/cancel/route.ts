@@ -22,6 +22,7 @@ export const POST = handle(async (req: Request, ctx: { params: Promise<{ id: str
       status: "cancelled",
       cancelledBy: admin.uid,
       cancelledAt: FieldValue.serverTimestamp(),
+      supplierLocation: FieldValue.delete(),
       updatedAt: FieldValue.serverTimestamp(),
     });
     return booking;

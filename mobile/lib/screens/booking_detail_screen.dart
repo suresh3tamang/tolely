@@ -4,8 +4,10 @@ import 'package:intl/intl.dart';
 
 import '../api.dart';
 import '../i18n.dart';
+import '../location.dart';
 import '../models.dart';
 import 'common.dart';
+import 'location_picker_screen.dart';
 
 /// Live view of one booking with a status timeline. Used by customers and suppliers.
 class BookingDetailScreen extends StatelessWidget {
@@ -42,6 +44,8 @@ class _Details extends StatelessWidget {
     final when = DateFormat('EEE, d MMM · h:mm a');
     final otherName = asSupplier ? b.customerName : b.supplierName;
     final otherPhone = asSupplier ? b.customerPhone : b.supplierPhone;
+    // The supplier's position is shared only while they're on the way.
+    final live = b.status == 'on_the_way' ? b.supplierLocation : null;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -62,6 +66,30 @@ class _Details extends StatelessWidget {
           label: tr('address'),
           value: [b.address, b.landmark].where((s) => s.isNotEmpty).join('\n'),
         ),
+        if (b.location != null) ...[
+          if (!asSupplier && live != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Icon(Icons.circle, size: 10, color: Colors.green.shade600),
+                  const SizedBox(width: 6),
+                  Text(tr('liveTracking'), style: text.labelLarge),
+                ],
+              ),
+            ),
+          BookingMap(home: b.location!, supplier: live),
+          if (asSupplier && b.isOpen)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                icon: const Icon(Icons.directions),
+                label: Text(tr('directions')),
+                onPressed: () => openDirections(b.location!),
+              ),
+            ),
+          const SizedBox(height: 8),
+        ],
         if (b.note.isNotEmpty) _Row(icon: Icons.notes, label: tr('note'), value: b.note),
         if (otherName != null)
           ListTile(

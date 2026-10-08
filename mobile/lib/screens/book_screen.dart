@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../api.dart';
 import '../i18n.dart';
 import '../models.dart';
 import 'common.dart';
+import 'location_picker_screen.dart';
 
 /// Booking form: option, time, address, payment. The price shown here is the
 /// catalog price from the server, which also re-checks it when booking.
 class BookScreen extends StatefulWidget {
-  const BookScreen({super.key, required this.service, required this.profile});
+  const BookScreen({super.key, required this.service, required this.profile, this.optionId, this.location});
   final Service service;
+
+  /// Pre-selected option and map pin, used by "Book again".
+  final String? optionId;
+  final LatLng? location;
   final Map<String, dynamic> profile;
 
   @override
@@ -18,7 +24,12 @@ class BookScreen extends StatefulWidget {
 }
 
 class _BookScreenState extends State<BookScreen> {
-  late ServiceOption _option = widget.service.options.first;
+  late ServiceOption _option = widget.service.options.firstWhere(
+    (o) => o.id == widget.optionId,
+    orElse: () => widget.service.options.first,
+  );
+  // Defaults to the pin from this customer's last booking.
+  late LatLng? _location = widget.location ?? widget.profile['lastLocation'] as LatLng?;
   late final _address = TextEditingController(text: widget.profile['address'] ?? '');
   late final _landmark = TextEditingController(text: widget.profile['landmark'] ?? '');
   final _note = TextEditingController();
@@ -45,6 +56,14 @@ class _BookScreenState extends State<BookScreen> {
     setState(() => _when = DateTime(date.year, date.month, date.day, time.hour, time.minute));
   }
 
+  Future<void> _pickLocation() async {
+    final picked = await Navigator.push<LatLng>(
+      context,
+      MaterialPageRoute(builder: (_) => LocationPickerScreen(initial: _location)),
+    );
+    if (picked != null) setState(() => _location = picked);
+  }
+
   Future<void> _book() async {
     if (_address.text.trim().isEmpty) return showError(context, '${tr('address')}: ${tr('required')}');
     setState(() => _busy = true);
@@ -57,7 +76,9 @@ class _BookScreenState extends State<BookScreen> {
         scheduledFor: _when,
         paymentMethod: _payment,
         note: _note.text,
+        location: _location,
       );
+      widget.profile['lastLocation'] = _location;
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('booked'))));
       Navigator.pop(context, true);
@@ -108,6 +129,31 @@ class _BookScreenState extends State<BookScreen> {
           TextField(
             controller: _landmark,
             decoration: InputDecoration(labelText: tr('landmark')),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            margin: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: _pickLocation,
+              child: _location == null
+                  ? ListTile(
+                      leading: const Icon(Icons.add_location_alt),
+                      title: Text(tr('addMapPin')),
+                      trailing: const Icon(Icons.chevron_right),
+                    )
+                  : Column(
+                      children: [
+                        IgnorePointer(child: BookingMap(home: _location!, height: 140)),
+                        ListTile(
+                          dense: true,
+                          leading: const Icon(Icons.check_circle, color: Colors.green),
+                          title: Text(tr('locationPinned')),
+                          trailing: const Icon(Icons.edit),
+                        ),
+                      ],
+                    ),
+            ),
           ),
           const SizedBox(height: 16),
           Text(tr('payment'), style: text.titleMedium),

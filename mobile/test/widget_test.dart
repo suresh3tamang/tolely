@@ -36,4 +36,15 @@ void main() {
     expect(b('accepted').completedAt, isNull);
     expect(b('accepted').price, 2500);
   });
+
+  test('booking reads map pin and live supplier location', () {
+    final b = Booking('id2', {
+      'status': 'on_the_way',
+      'location': {'lat': 27.7, 'lng': 85.33},
+      'supplierLocation': {'lat': 27.69, 'lng': 85.34, 'at': null},
+    });
+    expect(b.location?.latitude, 27.7);
+    expect(b.supplierLocation?.longitude, 85.34);
+    expect(Booking('id3', {'status': 'pending'}).location, isNull);
+  });
 }

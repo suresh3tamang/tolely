@@ -26,7 +26,9 @@ class _RoleGateState extends State<RoleGate> {
     if (user?['role'] == 'customer' || user?['role'] == 'supplier') {
       // Verified suppliers also get new-job alerts for their services.
       Push.start(
-        supplierServices: supplier?['verified'] == true ? List<String>.from(supplier!['services'] ?? []) : const [],
+        supplierServices: supplier?['verified'] == true && supplier!['online'] != false
+            ? List<String>.from(supplier['services'] ?? [])
+            : const [],
       );
     }
     return me;

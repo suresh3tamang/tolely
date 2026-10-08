@@ -84,6 +84,16 @@ export function BookingsTable({ bookings, onCancel }: { bookings: Booking[]; onC
                           <MapPin className="mt-0.5 size-3 shrink-0" />
                           <span>{b.address}{b.landmark && ` · ${b.landmark}`}</span>
                         </p>
+                        {b.location && (
+                          <a
+                            href={`https://www.google.com/maps?q=${b.location.lat},${b.location.lng}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-sky-700 hover:underline"
+                          >
+                            <MapPin className="size-3" /> View on map
+                          </a>
+                        )}
                         {b.note && <p className="mt-1 text-xs italic text-slate-500">“{b.note}”</p>}
                       </div>
                     </div>

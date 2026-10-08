@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'package:latlong2/latlong.dart';
+
 import 'i18n.dart';
+import 'location.dart';
 
 class ServiceOption {
   ServiceOption({required this.id, required this.labelEn, required this.labelNe, required this.price});
@@ -66,6 +69,9 @@ class Booking {
   DateTime? get departedAt => _time('departedAt');
   DateTime? get completedAt => _time('completedAt');
   DateTime? get cancelledAt => _time('cancelledAt');
+
+  LatLng? get location => latLngFrom(data['location']);
+  LatLng? get supplierLocation => latLngFrom(data['supplierLocation']);
 
   bool get isOpen => const {'pending', 'accepted', 'on_the_way'}.contains(status);
 

@@ -34,6 +34,7 @@ export const POST = handle(async (req: Request, ctx: { params: Promise<{ id: str
         supplierName: null,
         supplierPhone: null,
         vehicleNo: FieldValue.delete(),
+        supplierLocation: FieldValue.delete(),
         updatedAt: FieldValue.serverTimestamp(),
       });
       return booking;
@@ -42,6 +43,7 @@ export const POST = handle(async (req: Request, ctx: { params: Promise<{ id: str
     tx.update(ref, {
       status,
       [status === "completed" ? "completedAt" : "departedAt"]: FieldValue.serverTimestamp(),
+      ...(status === "completed" ? { supplierLocation: FieldValue.delete() } : {}),
       updatedAt: FieldValue.serverTimestamp(),
     });
     if (status === "completed") {

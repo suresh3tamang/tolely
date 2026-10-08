@@ -15,6 +15,7 @@ export type Booking = {
   note: string;
   paymentMethod: string;
   rating: number | null;
+  location?: { lat: number; lng: number } | null;
   scheduledFor: string;
   createdAt: string;
 };

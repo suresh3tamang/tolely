@@ -34,6 +34,10 @@ The customer can cancel while `pending` or `accepted`; the supplier can release 
   customer, job details, earnings and rating summary, edit details (goes back to verification)
 - Push notifications: new jobs for verified suppliers; accepted / on the way / completed /
   cancelled updates for customers
+- Maps (OpenStreetMap): customers pin their house when booking; suppliers get one-tap
+  directions; customers see the supplier's live location while they're on the way
+  (shared every 20 s while the supplier app is open)
+- Suppliers can go online / offline (offline = no new-job alerts); customers can "Book again"
 
 **Website**
 - Landing page with live service prices, how it works, FAQ
@@ -107,6 +111,7 @@ Customers see it in the app within a few minutes. The default catalog is in
 `_serviceIcons` in `mobile/lib/screens/common.dart`.
 
 ## Next steps
-- Live tanker location on a map
-- eSewa / Khalti online payment
-- Supplier documents upload for verification
+- Online payment with eSewa / Khalti (needs a merchant account)
+- Supplier document upload for verification (needs Firebase Storage, Blaze plan)
+- Background location for suppliers (today it's shared while the app is open)
+- Paid map tiles before heavy traffic (OpenStreetMap's free tiles have a fair-use policy)

@@ -29,7 +29,7 @@ class _CustomerHomeState extends State<CustomerHome> {
       appBar: AppBar(title: Text(tr('appName')), actions: appBarActions()),
       body: switch (_tab) {
         0 => _servicesGrid(),
-        1 => const _MyBookings(),
+        1 => _MyBookings(profile: widget.profile),
         _ => CustomerProfile(profile: widget.profile),
       },
       bottomNavigationBar: NavigationBar(
@@ -95,7 +95,8 @@ class _CustomerHomeState extends State<CustomerHome> {
 
 /// Live list of the customer's bookings, updated from Firestore.
 class _MyBookings extends StatelessWidget {
-  const _MyBookings();
+  const _MyBookings({required this.profile});
+  final Map<String, dynamic> profile;
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +117,7 @@ class _MyBookings extends StatelessWidget {
         return ListView.builder(
           padding: const EdgeInsets.all(12),
           itemCount: bookings.length,
-          itemBuilder: (context, i) => _BookingCard(bookings[i]),
+          itemBuilder: (context, i) => _BookingCard(bookings[i], profile: profile),
         );
       },
     );
@@ -124,8 +125,28 @@ class _MyBookings extends StatelessWidget {
 }
 
 class _BookingCard extends StatelessWidget {
-  const _BookingCard(this.b);
+  const _BookingCard(this.b, {required this.profile});
   final Booking b;
+  final Map<String, dynamic> profile;
+
+  /// Opens the booking form with the same service, option and map pin.
+  Future<void> _bookAgain(BuildContext context) async {
+    try {
+      final service = (await Api.services()).firstWhere((s) => s.key == b.serviceKey);
+      if (!context.mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BookScreen(service: service, profile: profile, optionId: b.optionId, location: b.location),
+        ),
+      );
+    } on StateError {
+      // The service was switched off since this booking.
+      if (context.mounted) showError(context, tr('serviceUnavailable'));
+    } catch (e) {
+      if (context.mounted) showError(context, e);
+    }
+  }
 
   Future<void> _run(BuildContext context, Future<void> Function() action) async {
     try {
@@ -199,6 +220,15 @@ class _BookingCard extends StatelessWidget {
                   ],
                 ),
               ],
+              if (!b.isOpen)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.replay),
+                    label: Text(tr('bookAgain')),
+                    onPressed: () => _bookAgain(context),
+                  ),
+                ),
             ],
           ),
         ),
