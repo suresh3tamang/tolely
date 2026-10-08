@@ -12,12 +12,8 @@ class ServiceOption {
 
   String get label => isNepali ? labelNe : labelEn;
 
-  factory ServiceOption.fromJson(Map<String, dynamic> j) => ServiceOption(
-        id: j['id'],
-        labelEn: j['labelEn'],
-        labelNe: j['labelNe'],
-        price: (j['price'] as num).toInt(),
-      );
+  factory ServiceOption.fromJson(Map<String, dynamic> j) =>
+      ServiceOption(id: j['id'], labelEn: j['labelEn'], labelNe: j['labelNe'], price: (j['price'] as num).toInt());
 }
 
 class Service {
@@ -32,12 +28,12 @@ class Service {
   String get name => isNepali ? nameNe : nameEn;
 
   factory Service.fromJson(Map<String, dynamic> j) => Service(
-        key: j['key'],
-        nameEn: j['nameEn'],
-        nameNe: j['nameNe'],
-        icon: j['icon'],
-        options: (j['options'] as List).map((o) => ServiceOption.fromJson(o)).toList(),
-      );
+    key: j['key'],
+    nameEn: j['nameEn'],
+    nameNe: j['nameNe'],
+    icon: j['icon'],
+    options: (j['options'] as List).map((o) => ServiceOption.fromJson(o)).toList(),
+  );
 }
 
 class Booking {
@@ -62,6 +58,16 @@ class Booking {
   String? get vehicleNo => data['vehicleNo'] as String?;
   int? get rating => (data['rating'] as num?)?.toInt();
   String get serviceKey => data['serviceKey'] as String;
+  String? get optionId => data['optionId'] as String?;
+
+  DateTime? _time(String field) => (data[field] as Timestamp?)?.toDate();
+  DateTime? get createdAt => _time('createdAt');
+  DateTime? get acceptedAt => _time('acceptedAt');
+  DateTime? get departedAt => _time('departedAt');
+  DateTime? get completedAt => _time('completedAt');
+  DateTime? get cancelledAt => _time('cancelledAt');
+
+  bool get isOpen => const {'pending', 'accepted', 'on_the_way'}.contains(status);
 
   factory Booking.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) => Booking(doc.id, doc.data()!);
 }

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'config.dart';
 import 'firebase_options.dart';
 import 'i18n.dart';
+import 'push.dart';
 import 'screens/login_screen.dart';
 import 'screens/role_gate.dart';
 
@@ -30,6 +31,7 @@ class TolelyApp extends StatelessWidget {
       builder: (context, _, _) => MaterialApp(
         title: 'Tolely',
         debugShowCheckedModeBanner: false,
+        scaffoldMessengerKey: messengerKey,
         theme: ThemeData(
           colorSchemeSeed: const Color(0xFF0369A1),
           useMaterial3: true,

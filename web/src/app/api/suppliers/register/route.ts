@@ -2,14 +2,12 @@ import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import { ApiError, getCaller, handle, parseBody } from "@/lib/api";
 import { db } from "@/lib/firebase-admin";
-import { SERVICES } from "@/lib/services";
-
-const serviceKeys = SERVICES.map((s) => s.key) as [string, ...string[]];
+import { loadCatalog } from "@/lib/catalog";
 
 const SupplierSchema = z.object({
   name: z.string().trim().min(2, "Name is required").max(80),
   area: z.string().trim().min(2, "Working area is required").max(120),
-  services: z.array(z.enum(serviceKeys)).min(1, "Choose at least one service"),
+  services: z.array(z.string()).min(1, "Choose at least one service").max(20),
   vehicleNo: z.string().trim().max(30).default(""),
   waterSource: z.string().trim().max(200).default(""),
 });
@@ -22,6 +20,8 @@ export const POST = handle(async (req: Request) => {
   const caller = await getCaller(req);
   if (caller.role === "admin") throw new ApiError(400, "Admins cannot register as suppliers");
   const body = await parseBody(req, SupplierSchema);
+  const known = new Set((await loadCatalog()).map((s) => s.key));
+  if (body.services.some((key) => !known.has(key))) throw new ApiError(400, "Unknown service");
   if (body.services.includes("tanker") && (!body.vehicleNo || !body.waterSource)) {
     throw new ApiError(400, "Tanker suppliers must add vehicle number and water source");
   }

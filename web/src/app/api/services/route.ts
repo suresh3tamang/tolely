@@ -1,5 +1,6 @@
-import { SERVICES } from "@/lib/services";
+import { getCatalog } from "@/lib/catalog";
 
-export function GET() {
-  return Response.json({ services: SERVICES.filter((s) => s.active) });
+export async function GET() {
+  const services = await getCatalog();
+  return Response.json({ services: services.filter((s) => s.active) });
 }

@@ -80,14 +80,16 @@ class _BookScreenState extends State<BookScreen> {
           RadioGroup<String>(
             groupValue: _option.id,
             onChanged: (id) => setState(() => _option = widget.service.options.firstWhere((o) => o.id == id)),
-            child: Column(children: [
-              for (final o in widget.service.options)
-                RadioListTile<String>(
-                  value: o.id,
-                  title: Text(o.label),
-                  secondary: Text(rupees(o.price), style: text.titleSmall),
-                ),
-            ]),
+            child: Column(
+              children: [
+                for (final o in widget.service.options)
+                  RadioListTile<String>(
+                    value: o.id,
+                    title: Text(o.label),
+                    secondary: Text(rupees(o.price), style: text.titleSmall),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: 8),
           Text(tr('when'), style: text.titleMedium),
@@ -98,9 +100,15 @@ class _BookScreenState extends State<BookScreen> {
             onTap: _pickTime,
           ),
           const SizedBox(height: 8),
-          TextField(controller: _address, decoration: InputDecoration(labelText: tr('address'))),
+          TextField(
+            controller: _address,
+            decoration: InputDecoration(labelText: tr('address')),
+          ),
           const SizedBox(height: 12),
-          TextField(controller: _landmark, decoration: InputDecoration(labelText: tr('landmark'))),
+          TextField(
+            controller: _landmark,
+            decoration: InputDecoration(labelText: tr('landmark')),
+          ),
           const SizedBox(height: 16),
           Text(tr('payment'), style: text.titleMedium),
           const SizedBox(height: 8),
@@ -113,7 +121,11 @@ class _BookScreenState extends State<BookScreen> {
             onSelectionChanged: (v) => setState(() => _payment = v.first),
           ),
           const SizedBox(height: 16),
-          TextField(controller: _note, maxLines: 2, decoration: InputDecoration(labelText: tr('note'))),
+          TextField(
+            controller: _note,
+            maxLines: 2,
+            decoration: InputDecoration(labelText: tr('note')),
+          ),
         ],
       ),
       bottomNavigationBar: SafeArea(

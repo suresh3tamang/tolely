@@ -1,7 +1,10 @@
 import { FieldValue } from "firebase-admin/firestore";
+import { after } from "next/server";
 import { z } from "zod";
 import { ApiError, handle, parseBody, requireRole } from "@/lib/api";
 import { db } from "@/lib/firebase-admin";
+import { messages } from "@/lib/messages";
+import { notifySuppliers, notifyUser } from "@/lib/notify";
 import { SUPPLIER_TRANSITIONS, type BookingStatus } from "@/lib/types";
 
 const StatusSchema = z.object({ status: z.enum(["pending", "on_the_way", "completed"]) });
@@ -14,7 +17,7 @@ export const POST = handle(async (req: Request, ctx: { params: Promise<{ id: str
   const firestore = db();
   const ref = firestore.collection("bookings").doc(id);
 
-  await firestore.runTransaction(async (tx) => {
+  const booking = await firestore.runTransaction(async (tx) => {
     const booking = await tx.get(ref);
     if (!booking.exists || booking.get("supplierId") !== caller.uid) {
       throw new ApiError(404, "Booking not found");
@@ -33,7 +36,7 @@ export const POST = handle(async (req: Request, ctx: { params: Promise<{ id: str
         vehicleNo: FieldValue.delete(),
         updatedAt: FieldValue.serverTimestamp(),
       });
-      return;
+      return booking;
     }
 
     tx.update(ref, {
@@ -46,7 +49,26 @@ export const POST = handle(async (req: Request, ctx: { params: Promise<{ id: str
         completedJobs: FieldValue.increment(1),
       });
     }
+    return booking;
   });
 
+  const b = {
+    id,
+    serviceNameEn: booking.get("serviceNameEn"),
+    serviceNameNe: booking.get("serviceNameNe"),
+    supplierName: booking.get("supplierName"),
+  };
+  const customerId = booking.get("customerId");
+  after(async () => {
+    if (status === "on_the_way") await notifyUser(customerId, messages.onTheWay(b));
+    if (status === "completed") await notifyUser(customerId, messages.completed(b));
+    if (status === "pending") {
+      await notifyUser(customerId, messages.released(b));
+      await notifySuppliers(
+        booking.get("serviceKey"),
+        messages.newJob({ ...b, optionLabelEn: booking.get("optionLabelEn"), optionLabelNe: booking.get("optionLabelNe") }),
+      );
+    }
+  });
   return Response.json({ ok: true });
 });

@@ -7,22 +7,25 @@ import 'common.dart';
 
 /// First screen after login: choose customer or supplier and fill the profile.
 class ProfileSetupScreen extends StatefulWidget {
-  const ProfileSetupScreen({super.key, required this.onDone});
+  const ProfileSetupScreen({super.key, required this.onDone, this.supplier});
   final VoidCallback onDone;
+
+  /// When set, edits this existing supplier profile instead of starting fresh.
+  final Map<String, dynamic>? supplier;
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
 }
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
-  bool? _isSupplier;
+  late bool? _isSupplier = widget.supplier == null ? null : true;
   final _form = GlobalKey<FormState>();
-  final _name = TextEditingController();
-  final _address = TextEditingController();
+  late final _name = TextEditingController(text: widget.supplier?['name']);
+  late final _address = TextEditingController(text: widget.supplier?['area']);
   final _landmark = TextEditingController();
-  final _vehicleNo = TextEditingController();
-  final _waterSource = TextEditingController();
-  final _services = <String>{};
+  late final _vehicleNo = TextEditingController(text: widget.supplier?['vehicleNo']);
+  late final _waterSource = TextEditingController(text: widget.supplier?['waterSource']);
+  late final _services = <String>{...List<String>.from(widget.supplier?['services'] ?? [])};
   late final Future<List<Service>> _allServices = Api.services();
   bool _busy = false;
 
@@ -60,74 +63,81 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 
   Widget _chooseRole() => ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          Text(tr('welcome'), style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 24),
-          _RoleCard(icon: Icons.home, label: tr('iNeedService'), onTap: () => setState(() => _isSupplier = false)),
-          const SizedBox(height: 12),
-          _RoleCard(
-            icon: Icons.local_shipping,
-            label: tr('iProvideService'),
-            onTap: () => setState(() => _isSupplier = true),
-          ),
-        ],
-      );
+    padding: const EdgeInsets.all(24),
+    children: [
+      Text(tr('welcome'), style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: 24),
+      _RoleCard(icon: Icons.home, label: tr('iNeedService'), onTap: () => setState(() => _isSupplier = false)),
+      const SizedBox(height: 12),
+      _RoleCard(
+        icon: Icons.local_shipping,
+        label: tr('iProvideService'),
+        onTap: () => setState(() => _isSupplier = true),
+      ),
+    ],
+  );
 
   Widget _profileForm() => Form(
-        key: _form,
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            TextFormField(controller: _name, decoration: InputDecoration(labelText: tr('name')), validator: _required),
-            const SizedBox(height: 16),
+    key: _form,
+    child: ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        TextFormField(
+          controller: _name,
+          decoration: InputDecoration(labelText: tr('name')),
+          validator: _required,
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _address,
+          decoration: InputDecoration(labelText: tr(_isSupplier! ? 'workArea' : 'address')),
+          validator: _required,
+        ),
+        const SizedBox(height: 16),
+        if (!_isSupplier!)
+          TextFormField(
+            controller: _landmark,
+            decoration: InputDecoration(labelText: tr('landmark')),
+          )
+        else ...[
+          Text(tr('servicesYouOffer'), style: Theme.of(context).textTheme.titleMedium),
+          FutureBuilder(
+            future: _allServices,
+            builder: (context, snap) => Column(
+              children: [
+                for (final s in snap.data ?? <Service>[])
+                  CheckboxListTile(
+                    value: _services.contains(s.key),
+                    title: Text(s.name),
+                    secondary: Icon(serviceIcon(s.icon)),
+                    onChanged: (on) => setState(() => on! ? _services.add(s.key) : _services.remove(s.key)),
+                  ),
+              ],
+            ),
+          ),
+          if (_services.contains('tanker')) ...[
             TextFormField(
-              controller: _address,
-              decoration: InputDecoration(labelText: tr(_isSupplier! ? 'workArea' : 'address')),
+              controller: _vehicleNo,
+              decoration: InputDecoration(labelText: tr('vehicleNo')),
               validator: _required,
             ),
             const SizedBox(height: 16),
-            if (!_isSupplier!)
-              TextFormField(controller: _landmark, decoration: InputDecoration(labelText: tr('landmark')))
-            else ...[
-              Text(tr('servicesYouOffer'), style: Theme.of(context).textTheme.titleMedium),
-              FutureBuilder(
-                future: _allServices,
-                builder: (context, snap) => Column(
-                  children: [
-                    for (final s in snap.data ?? <Service>[])
-                      CheckboxListTile(
-                        value: _services.contains(s.key),
-                        title: Text(s.name),
-                        secondary: Icon(serviceIcons[s.icon]),
-                        onChanged: (on) => setState(() => on! ? _services.add(s.key) : _services.remove(s.key)),
-                      ),
-                  ],
-                ),
-              ),
-              if (_services.contains('tanker')) ...[
-                TextFormField(
-                  controller: _vehicleNo,
-                  decoration: InputDecoration(labelText: tr('vehicleNo')),
-                  validator: _required,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _waterSource,
-                  decoration: InputDecoration(labelText: tr('waterSource')),
-                  validator: _required,
-                ),
-              ],
-            ],
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _busy || (_isSupplier! && _services.isEmpty) ? null : _save,
-              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-              child: Text(tr('save')),
+            TextFormField(
+              controller: _waterSource,
+              decoration: InputDecoration(labelText: tr('waterSource')),
+              validator: _required,
             ),
           ],
+        ],
+        const SizedBox(height: 24),
+        FilledButton(
+          onPressed: _busy || (_isSupplier! && _services.isEmpty) ? null : _save,
+          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+          child: Text(tr('save')),
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _RoleCard extends StatelessWidget {
@@ -138,12 +148,12 @@ class _RoleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-        child: ListTile(
-          contentPadding: const EdgeInsets.all(20),
-          leading: Icon(icon, size: 36),
-          title: Text(label, style: Theme.of(context).textTheme.titleMedium),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: onTap,
-        ),
-      );
+    child: ListTile(
+      contentPadding: const EdgeInsets.all(20),
+      leading: Icon(icon, size: 36),
+      title: Text(label, style: Theme.of(context).textTheme.titleMedium),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    ),
+  );
 }

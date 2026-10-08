@@ -1,8 +1,11 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { after } from "next/server";
 import { z } from "zod";
 import { ApiError, handle, parseBody, requireRole } from "@/lib/api";
 import { db } from "@/lib/firebase-admin";
-import { findOption } from "@/lib/services";
+import { findOption } from "@/lib/catalog";
+import { messages } from "@/lib/messages";
+import { notifySuppliers } from "@/lib/notify";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -21,7 +24,7 @@ export const POST = handle(async (req: Request) => {
   const caller = await requireRole(req, "customer");
   const body = await parseBody(req, BookingSchema);
 
-  const match = findOption(body.serviceKey, body.optionId);
+  const match = await findOption(body.serviceKey, body.optionId);
   if (!match) throw new ApiError(400, "Unknown service or option");
 
   const when = new Date(body.scheduledFor).getTime();
@@ -55,5 +58,17 @@ export const POST = handle(async (req: Request) => {
     updatedAt: FieldValue.serverTimestamp(),
   });
 
+  after(() =>
+    notifySuppliers(
+      match.service.key,
+      messages.newJob({
+        id: ref.id,
+        serviceNameEn: match.service.nameEn,
+        serviceNameNe: match.service.nameNe,
+        optionLabelEn: match.option.labelEn,
+        optionLabelNe: match.option.labelNe,
+      }),
+    ),
+  );
   return Response.json({ id: ref.id, price: match.option.price }, { status: 201 });
 });

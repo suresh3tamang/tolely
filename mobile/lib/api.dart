@@ -40,11 +40,7 @@ class Api {
   /// Returns {user, supplier}; either may be null.
   static Future<Map<String, dynamic>> me() async => Map<String, dynamic>.from(await _send('GET', '/api/me'));
 
-  static Future<void> saveCustomerProfile({
-    required String name,
-    required String address,
-    required String landmark,
-  }) =>
+  static Future<void> saveCustomerProfile({required String name, required String address, required String landmark}) =>
       _send('POST', '/api/me', {'name': name, 'address': address, 'landmark': landmark, 'language': language.value});
 
   static Future<void> registerSupplier({
@@ -53,14 +49,13 @@ class Api {
     required List<String> services,
     String vehicleNo = '',
     String waterSource = '',
-  }) =>
-      _send('POST', '/api/suppliers/register', {
-        'name': name,
-        'area': area,
-        'services': services,
-        'vehicleNo': vehicleNo,
-        'waterSource': waterSource,
-      });
+  }) => _send('POST', '/api/suppliers/register', {
+    'name': name,
+    'area': area,
+    'services': services,
+    'vehicleNo': vehicleNo,
+    'waterSource': waterSource,
+  });
 
   static Future<void> createBooking({
     required String serviceKey,
@@ -70,21 +65,28 @@ class Api {
     required DateTime scheduledFor,
     required String paymentMethod,
     required String note,
-  }) =>
-      _send('POST', '/api/bookings', {
-        'serviceKey': serviceKey,
-        'optionId': optionId,
-        'address': address,
-        'landmark': landmark,
-        'scheduledFor': scheduledFor.toUtc().toIso8601String(),
-        'paymentMethod': paymentMethod,
-        'note': note,
-      });
+  }) => _send('POST', '/api/bookings', {
+    'serviceKey': serviceKey,
+    'optionId': optionId,
+    'address': address,
+    'landmark': landmark,
+    'scheduledFor': scheduledFor.toUtc().toIso8601String(),
+    'paymentMethod': paymentMethod,
+    'note': note,
+  });
+
+  static Future<void> registerDevice(String token, {bool remove = false}) =>
+      _send('POST', '/api/me/device', {'token': token, 'remove': remove});
+
+  /// Permanently deletes the account. Fails while bookings are still open.
+  static Future<void> deleteAccount() => _send('DELETE', '/api/me');
+
+  static Future<void> reportProblem(String bookingId, String message) =>
+      _send('POST', '/api/bookings/$bookingId/report', {'message': message});
 
   static Future<void> cancelBooking(String id) => _send('POST', '/api/bookings/$id/cancel');
 
-  static Future<void> rateBooking(String id, int rating) =>
-      _send('POST', '/api/bookings/$id/rate', {'rating': rating});
+  static Future<void> rateBooking(String id, int rating) => _send('POST', '/api/bookings/$id/rate', {'rating': rating});
 
   static Future<void> acceptJob(String id) => _send('POST', '/api/bookings/$id/accept');
 

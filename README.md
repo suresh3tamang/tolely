@@ -24,6 +24,26 @@ Flutter app ──(Firebase ID token)──▶ Next.js API ──(Admin SDK)─�
 Booking flow: `pending` → supplier accepts → `accepted` → `on_the_way` → `completed` → customer rates.
 The customer can cancel while `pending` or `accepted`; the supplier can release an accepted job back to `pending`.
 
+## Features
+
+**Mobile app** (customers and suppliers in one app, Nepali/English)
+- Phone OTP login, profile, language choice, account deletion
+- Customers: browse services and prices, book with time/address/payment choice, live booking
+  status with a timeline, call the supplier, cancel, rate, report a problem
+- Suppliers: open jobs for their services, accept / on the way / completed / release, call the
+  customer, job details, earnings and rating summary, edit details (goes back to verification)
+- Push notifications: new jobs for verified suppliers; accepted / on the way / completed /
+  cancelled updates for customers
+
+**Website**
+- Landing page with live service prices, how it works, FAQ
+- `/partners` page for tanker owners, plumbers and electricians
+- `/privacy` and `/terms` (drafts, needed for Play Store / App Store; review before launch)
+- `/admin`: bookings (search, filter, cancel), supplier verification, **service and price
+  editor** (add new services without an app update), problem reports
+
+Business details (phone, email, Facebook, store links) live in `web/src/lib/site.ts`.
+
 ## Setup
 
 ### 1. Firebase project
@@ -62,12 +82,22 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
 - Phone OTP on Android needs your app's SHA-1/SHA-256 added in Firebase project settings.
 - For testing without real SMS, add **test phone numbers** in Firebase → Authentication → Phone.
 
+### 4. Push notifications
+- Android works once Firebase is configured.
+- iOS: in Xcode add the **Push Notifications** and **Background Modes → Remote notifications**
+  capabilities, and upload an APNs key in Firebase → Project settings → Cloud Messaging.
+
+### 5. Deploy the website
+Deploy `web/` to Vercel (or any Node host) with the same environment variables as `.env.local`.
+Then build the app with `--dart-define=API_BASE_URL=https://your-domain`.
+
 ## Adding a new service
-Add an entry to `SERVICES` in `web/src/lib/services.ts` (and its icon in `mobile/lib/screens/common.dart`).
-The app reads the catalog from `/api/services`, so no app update is needed for new prices.
+In `/admin` → **Services** → **New service**: set a name, icon and prices, and switch it on.
+Customers see it in the app within a few minutes. The default catalog is in
+`web/src/lib/services.ts`; to add a new *icon*, add it to `SERVICE_ICONS` there and to
+`_serviceIcons` in `mobile/lib/screens/common.dart`.
 
 ## Next steps
-- Push notifications (Firebase Cloud Messaging) when a job is accepted / on the way
 - Live tanker location on a map
 - eSewa / Khalti online payment
 - Supplier documents upload for verification

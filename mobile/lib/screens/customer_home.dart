@@ -7,7 +7,9 @@ import '../api.dart';
 import '../i18n.dart';
 import '../models.dart';
 import 'book_screen.dart';
+import 'booking_detail_screen.dart';
 import 'common.dart';
+import 'profile_screen.dart';
 
 class CustomerHome extends StatefulWidget {
   const CustomerHome({super.key, required this.profile});
@@ -25,63 +27,70 @@ class _CustomerHomeState extends State<CustomerHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(tr('appName')), actions: appBarActions()),
-      body: _tab == 0 ? _servicesGrid() : const _MyBookings(),
+      body: switch (_tab) {
+        0 => _servicesGrid(),
+        1 => const _MyBookings(),
+        _ => CustomerProfile(profile: widget.profile),
+      },
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
         destinations: [
           NavigationDestination(icon: const Icon(Icons.home), label: tr('home')),
           NavigationDestination(icon: const Icon(Icons.receipt_long), label: tr('myBookings')),
+          NavigationDestination(icon: const Icon(Icons.person), label: tr('profile')),
         ],
       ),
     );
   }
 
   Widget _servicesGrid() => FutureBuilder(
-        future: _services,
-        builder: (context, snap) {
-          if (snap.hasError) return Center(child: Text(snap.error.toString()));
-          if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-          return ListView(
-            padding: const EdgeInsets.all(16),
+    future: _services,
+    builder: (context, snap) {
+      if (snap.hasError) return Center(child: Text(snap.error.toString()));
+      if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+      return ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Text(tr('whatDoYouNeed'), style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 16),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
             children: [
-              Text(tr('whatDoYouNeed'), style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 16),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                children: [
-                  for (final s in snap.data!)
-                    Card(
-                      clipBehavior: Clip.antiAlias,
-                      child: InkWell(
-                        onTap: () async {
-                          final booked = await Navigator.push<bool>(
-                            context,
-                            MaterialPageRoute(builder: (_) => BookScreen(service: s, profile: widget.profile)),
-                          );
-                          if (booked == true) setState(() => _tab = 1);
-                        },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(serviceIcons[s.icon], size: 44, color: Theme.of(context).colorScheme.primary),
-                            const SizedBox(height: 8),
-                            Text(s.name, style: Theme.of(context).textTheme.titleMedium),
-                            Text('${rupees(s.options.first.price)}+', style: Theme.of(context).textTheme.bodySmall),
-                          ],
+              for (final s in snap.data!)
+                Card(
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: () async {
+                      final booked = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BookScreen(service: s, profile: widget.profile),
                         ),
-                      ),
+                      );
+                      if (booked == true) setState(() => _tab = 1);
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(serviceIcon(s.icon), size: 44, color: Theme.of(context).colorScheme.primary),
+                        const SizedBox(height: 8),
+                        Text(s.name, style: Theme.of(context).textTheme.titleMedium),
+                        Text('${rupees(s.options.first.price)}+', style: Theme.of(context).textTheme.bodySmall),
+                      ],
                     ),
-                ],
-              ),
+                  ),
+                ),
             ],
-          );
-        },
+          ),
+        ],
       );
+    },
+  );
 }
 
 /// Live list of the customer's bookings, updated from Firestore.
@@ -130,51 +139,68 @@ class _BookingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [
-              Expanded(child: Text('${b.serviceName} · ${b.optionLabel}', style: text.titleMedium)),
-              StatusChip(b.status),
-            ]),
-            const SizedBox(height: 6),
-            Text(DateFormat('EEE, d MMM · h:mm a').format(b.scheduledFor)),
-            Text('${rupees(b.price)} · ${tr(b.paymentMethod)}', style: text.bodyMedium),
-            if (b.supplierName != null) ...[
-              const Divider(),
-              Row(children: [
-                const Icon(Icons.person, size: 20),
-                const SizedBox(width: 6),
-                Expanded(child: Text([b.supplierName, b.vehicleNo].whereType<String>().where((s) => s.isNotEmpty).join(' · '))),
-                TextButton.icon(
-                  onPressed: () => callPhone(b.supplierPhone),
-                  icon: const Icon(Icons.call),
-                  label: Text(tr('call')),
-                ),
-              ]),
-            ],
-            if (b.status == 'pending' || b.status == 'accepted')
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => _run(context, () => Api.cancelBooking(b.id)),
-                  child: Text(tr('cancel')),
-                ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => BookingDetailScreen(bookingId: b.id, asSupplier: false)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(child: Text('${b.serviceName} · ${b.optionLabel}', style: text.titleMedium)),
+                  StatusChip(b.status),
+                ],
               ),
-            if (b.status == 'completed') ...[
-              const Divider(),
-              if (b.rating == null) Text(tr('rate')),
-              Row(children: [
-                for (var star = 1; star <= 5; star++)
-                  IconButton(
-                    icon: Icon(star <= (b.rating ?? 0) ? Icons.star : Icons.star_border, color: Colors.amber),
-                    onPressed: b.rating != null ? null : () => _run(context, () => Api.rateBooking(b.id, star)),
+              const SizedBox(height: 6),
+              Text(DateFormat('EEE, d MMM · h:mm a').format(b.scheduledFor)),
+              Text('${rupees(b.price)} · ${tr(b.paymentMethod)}', style: text.bodyMedium),
+              if (b.supplierName != null) ...[
+                const Divider(),
+                Row(
+                  children: [
+                    const Icon(Icons.person, size: 20),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        [b.supplierName, b.vehicleNo].whereType<String>().where((s) => s.isNotEmpty).join(' · '),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => callPhone(b.supplierPhone),
+                      icon: const Icon(Icons.call),
+                      label: Text(tr('call')),
+                    ),
+                  ],
+                ),
+              ],
+              if (b.status == 'pending' || b.status == 'accepted')
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => _run(context, () => Api.cancelBooking(b.id)),
+                    child: Text(tr('cancel')),
                   ),
-              ]),
+                ),
+              if (b.status == 'completed') ...[
+                const Divider(),
+                if (b.rating == null) Text(tr('rate')),
+                Row(
+                  children: [
+                    for (var star = 1; star <= 5; star++)
+                      IconButton(
+                        icon: Icon(star <= (b.rating ?? 0) ? Icons.star : Icons.star_border, color: Colors.amber),
+                        onPressed: b.rating != null ? null : () => _run(context, () => Api.rateBooking(b.id, star)),
+                      ),
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

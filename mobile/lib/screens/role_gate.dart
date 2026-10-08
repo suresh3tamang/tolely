@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../api.dart';
 import '../i18n.dart';
+import '../push.dart';
 import 'customer_home.dart';
 import 'profile_setup_screen.dart';
 import 'supplier_home.dart';
@@ -17,12 +18,19 @@ class RoleGate extends StatefulWidget {
 class _RoleGateState extends State<RoleGate> {
   late Future<Map<String, dynamic>> _me = _load();
 
-  // Applies the saved language once the profile arrives.
+  // Applies the saved language and starts notifications once the profile arrives.
   Future<Map<String, dynamic>> _load() => Api.me().then((me) {
-        final saved = (me['user'] as Map?)?['language'];
-        if (saved is String) language.value = saved;
-        return me;
-      });
+    final user = me['user'] as Map?;
+    final supplier = me['supplier'] as Map?;
+    if (user?['language'] is String) language.value = user!['language'];
+    if (user?['role'] == 'customer' || user?['role'] == 'supplier') {
+      // Verified suppliers also get new-job alerts for their services.
+      Push.start(
+        supplierServices: supplier?['verified'] == true ? List<String>.from(supplier!['services'] ?? []) : const [],
+      );
+    }
+    return me;
+  });
 
   void _reload() => setState(() => _me = _load());
 
@@ -34,10 +42,13 @@ class _RoleGateState extends State<RoleGate> {
         if (snap.hasError) {
           return Scaffold(
             body: Center(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Text(snap.error.toString()),
-                TextButton(onPressed: _reload, child: const Text('Retry')),
-              ]),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(snap.error.toString()),
+                  TextButton(onPressed: _reload, child: const Text('Retry')),
+                ],
+              ),
             ),
           );
         }

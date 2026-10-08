@@ -1,6 +1,6 @@
-// Service catalog. The server is the source of truth for prices: the app only
-// sends the service key and option id, and the price is looked up here.
-// To add a new service (painter, AC repair, shifting van...), add an entry.
+// Default service catalog. The live catalog is stored in Firestore
+// (`services` collection) and edited from the admin dashboard; these defaults
+// are used until an admin saves the catalog for the first time.
 
 export type ServiceOption = {
   id: string;
@@ -13,12 +13,25 @@ export type Service = {
   key: string;
   nameEn: string;
   nameNe: string;
-  icon: string; // Material icon name, mapped in the Flutter app
+  icon: string; // one of SERVICE_ICONS, mapped to a Material icon in the Flutter app
   active: boolean;
   options: ServiceOption[];
 };
 
-export const SERVICES: Service[] = [
+// Icons the mobile app knows how to draw. Add to both lists together.
+export const SERVICE_ICONS = [
+  "water_drop",
+  "cleaning_services",
+  "plumbing",
+  "electrical_services",
+  "local_shipping",
+  "format_paint",
+  "ac_unit",
+  "carpenter",
+  "handyman",
+] as const;
+
+export const DEFAULT_SERVICES: Service[] = [
   {
     key: "tanker",
     nameEn: "Water Tanker",
@@ -65,10 +78,27 @@ export const SERVICES: Service[] = [
       { id: "wiring", labelEn: "Wiring fault repair", labelNe: "वायरिङ मर्मत", price: 1500 },
     ],
   },
+  // Ready to switch on from the admin dashboard when suppliers join.
+  {
+    key: "shifting",
+    nameEn: "House Shifting",
+    nameNe: "घर सार्ने",
+    icon: "local_shipping",
+    active: false,
+    options: [
+      { id: "mini_truck", labelEn: "Mini truck (1–2 rooms)", labelNe: "सानो ट्रक (१–२ कोठा)", price: 4000 },
+      { id: "truck", labelEn: "Truck (3+ rooms)", labelNe: "ट्रक (३+ कोठा)", price: 8000 },
+    ],
+  },
+  {
+    key: "home_cleaning",
+    nameEn: "Home Cleaning",
+    nameNe: "घर सफाई",
+    icon: "cleaning_services",
+    active: false,
+    options: [
+      { id: "room", labelEn: "Per room", labelNe: "प्रति कोठा", price: 800 },
+      { id: "deep", labelEn: "Full house deep clean", labelNe: "पूरै घर गहिरो सफाई", price: 6000 },
+    ],
+  },
 ];
-
-export function findOption(serviceKey: string, optionId: string) {
-  const service = SERVICES.find((s) => s.key === serviceKey && s.active);
-  const option = service?.options.find((o) => o.id === optionId);
-  return service && option ? { service, option } : null;
-}
