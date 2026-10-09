@@ -925,6 +925,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No place found. Try another spelling, or move the map.'**
   String get noPlaces;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet. Every update about your bookings shows here.'**
+  String get noNotifications;
+
+  /// No description provided for @stepArrived.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrived'**
+  String get stepArrived;
+
+  /// No description provided for @iHaveArrived.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve arrived'**
+  String get iHaveArrived;
+
+  /// No description provided for @runningLate.
+  ///
+  /// In en, this message translates to:
+  /// **'Running late'**
+  String get runningLate;
+
+  /// No description provided for @howLate.
+  ///
+  /// In en, this message translates to:
+  /// **'How late will you be?'**
+  String get howLate;
+
+  /// No description provided for @lateMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String lateMinutes(int minutes);
+
+  /// No description provided for @lateTold.
+  ///
+  /// In en, this message translates to:
+  /// **'The customer has been told.'**
+  String get lateTold;
+
+  /// No description provided for @etaAway.
+  ///
+  /// In en, this message translates to:
+  /// **'About {minutes} min away · {km} km'**
+  String etaAway(int minutes, String km);
+
+  /// No description provided for @arrivedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has arrived at your place.'**
+  String arrivedNote(String name);
+
+  /// No description provided for @lateNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Running about {minutes} min late'**
+  String lateNote(int minutes);
+
+  /// No description provided for @delayedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Delayed: the booked time has passed'**
+  String get delayedNote;
+
+  /// No description provided for @arrivedChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrived'**
+  String get arrivedChip;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

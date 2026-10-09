@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tolely/core/l10n/l10n.dart';
 import 'package:tolely/core/widgets/language_button.dart';
+import 'package:tolely/features/notifications/presentation/notification_bell.dart';
 import 'package:tolely/features/auth/data/auth_repository.dart';
 import 'package:tolely/features/booking/data/booking_repository.dart';
 import 'package:tolely/features/booking/domain/booking.dart';
@@ -69,6 +70,7 @@ class _SupplierHomeState extends State<SupplierHome> {
           title: Text(supplier.name),
           actions: [
             if (verified) OnlineSwitch(supplier: supplier, onChanged: widget.onRefresh),
+            const NotificationBell(),
             const LanguageButton(),
           ],
           bottom: TabBar(

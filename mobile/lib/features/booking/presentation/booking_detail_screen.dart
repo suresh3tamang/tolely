@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tolely/core/l10n/l10n.dart';
 import 'package:tolely/core/services/location_service.dart';
 import 'package:tolely/core/utils/format.dart';
+import 'package:tolely/core/utils/geo.dart';
 import 'package:tolely/core/utils/phone.dart';
 import 'package:tolely/core/widgets/feedback.dart';
 import 'package:tolely/features/booking/data/booking_repository.dart';
@@ -85,11 +86,27 @@ class _Details extends StatelessWidget {
                 children: [
                   Icon(Icons.circle, size: 10, color: Colors.green.shade600),
                   const SizedBox(width: 6),
-                  Text(l10n.liveTracking, style: text.labelLarge),
+                  Expanded(child: Text(l10n.liveTracking, style: text.labelLarge)),
                 ],
               ),
             ),
           BookingMap(home: b.location!, supplier: live),
+          if (!asSupplier && live != null && b.arrivedAt == null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Row(
+                children: [
+                  const Icon(Icons.near_me, size: 18, color: Colors.amber),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      l10n.etaAway(etaMinutes(live, b.location!), distanceKm(live, b.location!).toStringAsFixed(1)),
+                      style: text.titleSmall,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           if (asSupplier && b.isOpen)
             Align(
               alignment: Alignment.centerLeft,
@@ -101,6 +118,7 @@ class _Details extends StatelessWidget {
             ),
           const SizedBox(height: 8),
         ],
+        if (b.isOpen) _StatusNotes(b),
         if (b.note.isNotEmpty) _Row(icon: Icons.notes, label: l10n.note, value: b.note),
         if (otherName != null)
           ListTile(
@@ -152,4 +170,40 @@ class _Row extends StatelessWidget {
     title: Text(label, style: Theme.of(context).textTheme.bodySmall),
     subtitle: Text(value, style: Theme.of(context).textTheme.bodyLarge),
   );
+}
+
+/// Arrived, running late, or delayed: a coloured note under the map.
+class _StatusNotes extends StatelessWidget {
+  const _StatusNotes(this.b);
+
+  final Booking b;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final end = b.scheduledEnd ?? b.scheduledFor;
+    final waited = Duration(minutes: b.lateByMinutes ?? 0);
+    final delayed = (b.status == BookingStatus.pending || b.status == BookingStatus.accepted) &&
+        DateTime.now().isAfter(end.add(waited));
+    final (text, color, icon) = b.arrivedAt != null
+        ? (l10n.arrivedNote(b.supplierName ?? ''), Colors.green, Icons.place)
+        : b.lateByMinutes != null && b.status != BookingStatus.pending
+        ? (l10n.lateNote(b.lateByMinutes!), Colors.orange, Icons.schedule)
+        : delayed
+        ? (l10n.delayedNote, Colors.red, Icons.schedule)
+        : (null, Colors.grey, Icons.info);
+    if (text == null) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: color.shade50, borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        children: [
+          Icon(icon, color: color.shade800),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text, style: TextStyle(color: color.shade900, fontWeight: FontWeight.w600))),
+        ],
+      ),
+    );
+  }
 }

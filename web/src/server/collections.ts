@@ -9,3 +9,5 @@ export const complaints = () => db().collection("complaints");
 export const serviceCatalog = () => db().collection("services");
 export const settings = () => db().collection("settings");
 export const settlements = () => db().collection("settlements");
+/** Each person's notifications (the bell): users/{uid}/notifications. */
+export const inbox = (uid: string) => users().doc(uid).collection("notifications");

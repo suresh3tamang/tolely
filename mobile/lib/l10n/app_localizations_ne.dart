@@ -435,4 +435,51 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get noPlaces => 'ठाउँ फेला परेन। अर्को हिज्जे प्रयोग गर्नुहोस्, वा नक्सा सार्नुहोस्।';
+
+  @override
+  String get notifications => 'सूचनाहरू';
+
+  @override
+  String get noNotifications => 'अहिलेसम्म कुनै सूचना छैन। तपाईंको बुकिङका सबै खबर यहाँ देखिन्छन्।';
+
+  @override
+  String get stepArrived => 'आइपुग्नुभयो';
+
+  @override
+  String get iHaveArrived => 'म आइपुगें';
+
+  @override
+  String get runningLate => 'ढिलो हुँदैछ';
+
+  @override
+  String get howLate => 'कति ढिलो हुनुहुन्छ?';
+
+  @override
+  String lateMinutes(int minutes) {
+    return '$minutes मिनेट';
+  }
+
+  @override
+  String get lateTold => 'ग्राहकलाई जानकारी दिइयो।';
+
+  @override
+  String etaAway(int minutes, String km) {
+    return 'करिब $minutes मिनेट टाढा · $km कि.मि.';
+  }
+
+  @override
+  String arrivedNote(String name) {
+    return '$name तपाईंको ठाउँमा आइपुग्नुभयो।';
+  }
+
+  @override
+  String lateNote(int minutes) {
+    return 'करिब $minutes मिनेट ढिलो';
+  }
+
+  @override
+  String get delayedNote => 'ढिलो: बुक गरेको समय बितिसक्यो';
+
+  @override
+  String get arrivedChip => 'आइपुग्नुभयो';
 }

@@ -22,3 +22,23 @@ export function isInNepal(point: LatLng): boolean {
 
 /** The middle of Kathmandu: where maps start before we know where the person is. */
 export const KATHMANDU: LatLng = { lat: 27.7172, lng: 85.324 };
+
+/** Straight-line distance between two points, in kilometres. */
+export function distanceKm(a: LatLng, b: LatLng): number {
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const dLat = rad(b.lat - a.lat);
+  const dLng = rad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
+
+/**
+ * Rough minutes to arrive: roads are about 1.4 times longer than a straight line, and Kathmandu traffic
+ * averages about 18 km/h. Shown as "about N min", never as a promise.
+ */
+export function etaMinutes(from: LatLng, to: LatLng): number {
+  return Math.max(1, Math.round(((distanceKm(from, to) * 1.4) / 18) * 60));
+}
+
+/** Within this distance the supplier is "almost there". */
+export const NEAR_KM = 0.5;

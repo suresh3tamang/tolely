@@ -7,6 +7,10 @@ import { BookingCard, type WebBooking } from "@/app/book/my-bookings";
 import { renderPage } from "./helpers";
 
 vi.mock("@/client/firebase", () => ({ apiFetch: vi.fn(), clientAuth: vi.fn(), clientDb: vi.fn() }));
+// The real map needs a browser; this stand-in shows where the markers would be.
+vi.mock("@/app/book/tracking-map-lazy", () => ({
+  TrackingMap: ({ supplier }: { supplier: { lat: number } | null }) => <div data-testid="live-map">{supplier ? "supplier on map" : "no supplier yet"}</div>,
+}));
 
 const base: WebBooking = {
   id: "b1",
@@ -22,6 +26,14 @@ const base: WebBooking = {
   scheduledEnd: null,
   contactName: "",
   contactPhone: "",
+  createdAt: null,
+  acceptedAt: null,
+  departedAt: null,
+  arrivedAt: null,
+  completedAt: null,
+  cancelledAt: null,
+  supplierLocation: null,
+  lateByMinutes: null,
   location: null,
   supplierName: null,
   supplierPhone: null,
@@ -77,7 +89,7 @@ describe("a booking on the website", () => {
 
   it("once accepted, shows the supplier with rating, jobs and a call link", () => {
     renderPage(<BookingCard booking={withSupplier()} />);
-    expect(screen.getByText("Accepted")).toBeTruthy();
+    expect(screen.getAllByText("Accepted")).toHaveLength(2); // the status badge and the step
     expect(screen.getByText("Hari Tamang")).toBeTruthy();
     expect(screen.getByText(/4\.6 \(5\)/)).toBeTruthy();
     expect(screen.getByText(/12 jobs/)).toBeTruthy();
@@ -94,7 +106,7 @@ describe("a booking on the website", () => {
   it("is shown in Nepali too", () => {
     renderPage(<BookingCard booking={withSupplier()} />, "ne");
     expect(screen.getByText("पानी ट्याङ्कर")).toBeTruthy();
-    expect(screen.getByText("स्वीकार भयो")).toBeTruthy();
+    expect(screen.getAllByText("स्वीकार भयो")).toHaveLength(2);
     expect(screen.getByRole("link", { name: /फोन गर्नुहोस्/ })).toBeTruthy();
   });
 
@@ -181,3 +193,50 @@ function within_dialog(name: string): HTMLElement {
   const dialog = screen.getByRole("dialog");
   return Array.from(dialog.querySelectorAll("button")).find((b) => b.textContent === name)!;
 }
+
+describe("tracking a booking", () => {
+  const at = (h: number, m = 0) => new Date(2026, 9, 9, h, m);
+
+  it("shows who accepted and when, step by step", () => {
+    renderPage(
+      <BookingCard booking={withSupplier({ status: "on_the_way", createdAt: at(9), acceptedAt: at(9, 5), departedAt: at(9, 40), supplierName: "Hari" })} now={Date.now()} />,
+    );
+    expect(screen.getByText("Accepted")).toBeTruthy(); // the step (the badge says "On the way")
+    expect(screen.getByText("Hari")).toBeTruthy(); // who: on the supplier card
+    expect(screen.getByText(/9 Oct, 09:05|9 Oct, 9:05/)).toBeTruthy();
+    expect(screen.getAllByText("On the way")).toHaveLength(2); // the status badge and the step
+    expect(screen.getByText("Arrived")).toBeTruthy(); // the next step, not done yet
+  });
+
+  it("while on the way: the live map, how far and about how long", () => {
+    renderPage(
+      <BookingCard
+        booking={withSupplier({
+          status: "on_the_way",
+          departedAt: at(9, 40),
+          location: { lat: 27.665, lng: 85.3667 },
+          supplierLocation: { lat: 27.6786, lng: 85.3494, at: new Date() },
+        })}
+        now={Date.now()}
+      />,
+    );
+    expect(screen.getByTestId("live-map").textContent).toBe("supplier on map");
+    expect(screen.getByText(/About \d+ min away · 2\.\d km/)).toBeTruthy();
+    expect(screen.getByText("Location updated just now")).toBeTruthy();
+  });
+
+  it("says when the supplier has arrived, or is running late", () => {
+    const { unmount } = renderPage(<BookingCard booking={withSupplier({ status: "on_the_way", arrivedAt: at(10), supplierName: "Hari" })} now={Date.now()} />);
+    expect(screen.getByText("Hari has arrived at your place.")).toBeTruthy();
+    expect(screen.queryByTestId("live-map")).toBeNull(); // no need to track any more
+    unmount();
+    renderPage(<BookingCard booking={withSupplier({ lateByMinutes: 30 })} now={Date.now()} />);
+    expect(screen.getByText("Running about 30 min late")).toBeTruthy();
+  });
+
+  it("marks a booking delayed when its time has passed and nobody is on the way", () => {
+    const past = withSupplier({ scheduledFor: new Date(Date.now() - 4 * 3_600_000), scheduledEnd: new Date(Date.now() - 3_600_000) });
+    renderPage(<BookingCard booking={past} now={Date.now()} />);
+    expect(screen.getByText("Delayed: the booked time has passed")).toBeTruthy();
+  });
+});

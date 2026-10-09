@@ -18,6 +18,12 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
       allow write: if false;
+
+      // The bell: only the person can read their notifications. Marking them seen goes through the API.
+      match /notifications/{id} {
+        allow read: if signedIn() && request.auth.uid == uid;
+        allow write: if false;
+      }
     }
 
     // A supplier's account holds money details (fees owed), so only the supplier

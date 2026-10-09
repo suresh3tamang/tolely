@@ -12,6 +12,7 @@ import 'package:tolely/features/auth/data/auth_repository.dart';
 import 'package:tolely/features/booking/data/booking_repository.dart';
 import 'package:tolely/features/catalog/data/catalog_repository.dart';
 import 'package:tolely/features/map/data/places_repository.dart';
+import 'package:tolely/features/notifications/data/notifications_repository.dart';
 import 'package:tolely/features/profile/data/profile_repository.dart';
 import 'package:tolely/features/supplier/data/supplier_repository.dart';
 import 'package:tolely/features/voice/data/voice_repository.dart';
@@ -35,6 +36,7 @@ class AppDependencies {
     required this.voice,
     required this.speech,
     required this.places,
+    required this.notifications,
   });
 
   static Future<AppDependencies> create() async {
@@ -79,6 +81,7 @@ class AppDependencies {
       voice: VoiceRepository(api),
       speech: DeviceSpeechService(),
       places: PlacesRepository(api),
+      notifications: NotificationsRepository(api),
     );
   }
 
@@ -94,6 +97,7 @@ class AppDependencies {
   final VoiceRepository voice;
   final SpeechService speech;
   final PlacesRepository places;
+  final NotificationsRepository notifications;
 
   /// Wraps [child] so every screen can read these.
   Widget provide({required Widget child}) => MultiProvider(
@@ -109,6 +113,7 @@ class AppDependencies {
       Provider<VoiceRepository>.value(value: voice),
       Provider<SpeechService>.value(value: speech),
       Provider<PlacesRepository>.value(value: places),
+      Provider<NotificationsRepository>.value(value: notifications),
       ChangeNotifierProvider<LocaleController>.value(value: locale),
     ],
     child: child,

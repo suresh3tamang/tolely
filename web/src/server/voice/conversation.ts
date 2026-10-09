@@ -1,3 +1,4 @@
+import { formatDay } from "@/shared/dates";
 import { availableSlots, type SlotId } from "@/shared/schedule";
 import type { Service } from "@/shared/services";
 import type { ClientClock, Draft } from "./voice.service";
@@ -63,9 +64,7 @@ function dayText(date: string, clock: ClientClock, lang: "ne" | "en"): string {
   if (date === clock.today) return lang === "ne" ? "आज" : "today";
   if (date === addDays(clock.today, 1)) return lang === "ne" ? "भोलि" : "tomorrow";
   if (date === addDays(clock.today, 2)) return lang === "ne" ? "पर्सि" : "the day after tomorrow";
-  return new Date(`${date}T00:00:00Z`).toLocaleDateString(lang === "ne" ? "ne-NP-u-nu-latn" : "en-GB", {
-    weekday: "long", day: "numeric", month: "short", timeZone: "UTC",
-  });
+  return formatDay(new Date(`${date}T00:00:00Z`), lang, { long: true, utc: true });
 }
 
 /** Checks the merged draft, works out what is still missing, and words the next question. */

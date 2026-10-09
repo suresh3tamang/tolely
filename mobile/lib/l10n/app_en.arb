@@ -167,5 +167,22 @@
   "voiceTapToSpeak": "Tap to speak",
   "searchPlace": "Search a place, e.g. Balkot Chowk",
   "searchByVoice": "Say the place",
-  "noPlaces": "No place found. Try another spelling, or move the map."
+  "noPlaces": "No place found. Try another spelling, or move the map.",
+  "notifications": "Notifications",
+  "noNotifications": "No notifications yet. Every update about your bookings shows here.",
+  "stepArrived": "Arrived",
+  "iHaveArrived": "I've arrived",
+  "runningLate": "Running late",
+  "howLate": "How late will you be?",
+  "lateMinutes": "{minutes} min",
+  "@lateMinutes": {"placeholders": {"minutes": {"type": "int"}}},
+  "lateTold": "The customer has been told.",
+  "etaAway": "About {minutes} min away · {km} km",
+  "@etaAway": {"placeholders": {"minutes": {"type": "int"}, "km": {"type": "String"}}},
+  "arrivedNote": "{name} has arrived at your place.",
+  "@arrivedNote": {"placeholders": {"name": {"type": "String"}}},
+  "lateNote": "Running about {minutes} min late",
+  "@lateNote": {"placeholders": {"minutes": {"type": "int"}}},
+  "delayedNote": "Delayed: the booked time has passed",
+  "arrivedChip": "Arrived"
 }

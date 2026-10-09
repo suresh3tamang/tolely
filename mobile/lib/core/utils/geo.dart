@@ -11,3 +11,15 @@ LatLng? latLngFromJson(Object? value) {
 }
 
 Map<String, double> latLngToJson(LatLng point) => {'lat': point.latitude, 'lng': point.longitude};
+
+const _distance = Distance();
+
+/// Straight-line distance in kilometres.
+double distanceKm(LatLng a, LatLng b) => _distance.as(LengthUnit.Meter, a, b) / 1000;
+
+/// Rough minutes to arrive: roads are about 1.4 times longer than a straight line, and Kathmandu traffic
+/// averages about 18 km/h (same as the website). Shown as "about N min", never as a promise.
+int etaMinutes(LatLng from, LatLng to) {
+  final minutes = (distanceKm(from, to) * 1.4 / 18 * 60).round();
+  return minutes < 1 ? 1 : minutes;
+}

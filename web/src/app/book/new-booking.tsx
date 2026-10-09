@@ -6,6 +6,7 @@ import { apiFetch } from "@/client/firebase";
 import { useI18n } from "@/client/i18n/provider";
 import { ServiceGlyph } from "@/components/service-icons";
 import { Button, Card, inputClass, rupees, useToast } from "@/components/ui";
+import { formatDay } from "@/shared/dates";
 import { isInNepal, type LatLng } from "@/shared/geo";
 import type { Service } from "@/shared/services";
 import { LocationPicker } from "./location-picker-lazy";
@@ -117,7 +118,7 @@ export function NewBooking({
     const date = new Date(y, m - 1, d);
     if (key === quickDays[0]) return t("today");
     if (key === quickDays[1]) return t("tomorrow");
-    return date.toLocaleDateString(lang === "ne" ? "ne-NP-u-nu-latn" : "en-GB", { weekday: "short", day: "numeric", month: "short" });
+    return formatDay(date, lang === "ne" ? "ne" : "en");
   }
   const summary = chosen && slot ? t("summaryWhen", { day: dayName(day), time: slotLabel(slot, t("asap")) }) : "";
 

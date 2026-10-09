@@ -12,7 +12,7 @@ class _Step {
   final bool isCancel;
 }
 
-/// Vertical timeline: booked → accepted → on the way → completed (or cancelled).
+/// Vertical timeline: booked → accepted → on the way → arrived → completed (or cancelled).
 class BookingTimeline extends StatelessWidget {
   const BookingTimeline(this.booking, {super.key});
 
@@ -30,6 +30,7 @@ class BookingTimeline extends StatelessWidget {
       ] else ...[
         _Step(l10n.stepAccepted, b.acceptedAt),
         _Step(l10n.stepOnTheWay, b.departedAt),
+        _Step(l10n.stepArrived, b.arrivedAt),
         _Step(l10n.stepCompleted, b.completedAt),
       ],
     ];
@@ -37,7 +38,7 @@ class BookingTimeline extends StatelessWidget {
     final reached = switch (b.status) {
       BookingStatus.pending => 1,
       BookingStatus.accepted => 2,
-      BookingStatus.onTheWay => 3,
+      BookingStatus.onTheWay => b.arrivedAt != null ? 4 : 3,
       _ => steps.length,
     };
     final color = Theme.of(context).colorScheme.primary;

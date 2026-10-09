@@ -7,9 +7,10 @@ import { db } from "@/server/firebase";
 import { ApiError, type Caller } from "@/server/http";
 import { messages } from "@/server/notifications/messages";
 import { getSettings } from "@/server/settings/settings.service";
-import { notifySuppliers, notifyUser } from "@/server/notifications/notify";
+import { tell } from "@/server/notifications/inbox";
+import { notifySuppliers } from "@/server/notifications/notify";
 import type { BookingStatus } from "@/shared/types";
-import type { LatLng } from "@/shared/geo";
+import { NEAR_KM, distanceKm, etaMinutes, type LatLng } from "@/shared/geo";
 import { computeEarning, computeFee } from "./fees";
 import { ADMIN_CANCELLABLE, CUSTOMER_CANCELLABLE, canSupplierChange, isAcceptableBookingWindow } from "./rules";
 import type { CreateBookingInput } from "./schemas";
@@ -107,7 +108,7 @@ export async function acceptBooking(caller: Caller, id: string) {
   });
 
   after(() =>
-    notifyUser(
+    tell(
       booking.get("customerId"),
       messages.accepted({
         id,
@@ -190,10 +191,10 @@ export async function updateBookingStatus(
   };
   const customerId = booking.get("customerId");
   after(async () => {
-    if (status === "on_the_way") await notifyUser(customerId, messages.onTheWay(summary));
-    if (status === "completed") await notifyUser(customerId, messages.completed(summary));
+    if (status === "on_the_way") await tell(customerId, messages.onTheWay(summary));
+    if (status === "completed") await tell(customerId, messages.completed(summary));
     if (status === "pending") {
-      await notifyUser(customerId, messages.released(summary));
+      await tell(customerId, messages.released(summary));
       await notifySuppliers(
         booking.get("serviceKey"),
         messages.newJob({
@@ -228,7 +229,7 @@ export async function cancelBookingAsCustomer(caller: Caller, id: string) {
   });
 
   after(() =>
-    notifyUser(
+    tell(
       booking.get("supplierId"),
       messages.cancelled({ id, serviceNameEn: booking.get("serviceNameEn"), serviceNameNe: booking.get("serviceNameNe") }),
     ),
@@ -261,8 +262,8 @@ export async function cancelBookingAsAdmin(admin: Caller, id: string) {
     serviceNameNe: booking.get("serviceNameNe"),
   });
   after(async () => {
-    await notifyUser(booking.get("customerId"), message);
-    await notifyUser(booking.get("supplierId"), message);
+    await tell(booking.get("customerId"), message);
+    await tell(booking.get("supplierId"), message);
   });
 }
 
@@ -314,4 +315,73 @@ export async function shareSupplierLocation(caller: Caller, id: string, { lat, l
   if (booking.get("status") !== "on_the_way") throw new ApiError(409, "Location is shared only while on the way");
 
   await ref.update({ supplierLocation: { lat, lng, at: FieldValue.serverTimestamp() } });
+
+  // Close to the customer for the first time: tell them to get ready.
+  const home = booking.get("location") as LatLng | null | undefined;
+  if (home && !booking.get("nearNotifiedAt") && distanceKm({ lat, lng }, home) <= NEAR_KM) {
+    await ref.update({ nearNotifiedAt: FieldValue.serverTimestamp() });
+    after(() => tell(booking.get("customerId"), messages.near({ ...summaryOf(id, booking), minutes: etaMinutes({ lat, lng }, home) })));
+  }
+}
+
+/** The fields every booking message needs. */
+function summaryOf(id: string, booking: FirebaseFirestore.DocumentSnapshot) {
+  return {
+    id,
+    serviceNameEn: booking.get("serviceNameEn"),
+    serviceNameNe: booking.get("serviceNameNe"),
+    supplierName: booking.get("supplierName"),
+  };
+}
+
+/** The assigned supplier says they have arrived at the customer's place. */
+export async function markArrived(caller: Caller, id: string) {
+  const ref = bookings().doc(id);
+  const booking = await ref.get();
+  if (!booking.exists || booking.get("supplierId") !== caller.uid) throw new ApiError(404, "Booking not found");
+  if (booking.get("status") !== "on_the_way") throw new ApiError(409, "Start the trip first");
+  if (booking.get("arrivedAt")) return; // already said so
+
+  await ref.update({ arrivedAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  after(() => tell(booking.get("customerId"), messages.arrived(summaryOf(id, booking))));
+}
+
+/** The assigned supplier says they will be late by some minutes; the customer is told. */
+export async function reportLate(caller: Caller, id: string, minutes: number) {
+  const ref = bookings().doc(id);
+  const booking = await ref.get();
+  if (!booking.exists || booking.get("supplierId") !== caller.uid) throw new ApiError(404, "Booking not found");
+  if (!["accepted", "on_the_way"].includes(booking.get("status"))) throw new ApiError(409, "This job is not open");
+  if (booking.get("arrivedAt")) throw new ApiError(409, "You have already arrived");
+
+  await ref.update({
+    lateByMinutes: minutes,
+    lateReportedAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+  after(() => tell(booking.get("customerId"), messages.late({ ...summaryOf(id, booking), minutes })));
+}
+
+/**
+ * Runs every few minutes (a cron job): finds open bookings whose time window is over with nobody on the way,
+ * tells the customer once, and reminds the supplier. Returns how many bookings were handled.
+ */
+export async function notifyLateBookings(now = Date.now()) {
+  // Open bookings are few, so they are filtered here instead of needing an extra database index.
+  const open = await bookings().where("status", "in", ["pending", "accepted"]).get();
+  const late = open.docs.filter((b) => {
+    if (b.get("delayNotifiedAt")) return false;
+    const end = (b.get("scheduledEnd") ?? b.get("scheduledFor")) as Timestamp | undefined;
+    // A supplier who said "running late" gets that much extra time first.
+    const grace = ((b.get("lateByMinutes") as number | undefined) ?? 0) * 60_000;
+    return !!end && end.toMillis() + grace < now;
+  });
+
+  for (const b of late) {
+    await b.ref.update({ delayNotifiedAt: FieldValue.serverTimestamp() });
+    const summary = summaryOf(b.id, b);
+    await tell(b.get("customerId"), messages.delayed(summary));
+    if (b.get("supplierId")) await tell(b.get("supplierId"), messages.reminder(summary));
+  }
+  return late.length;
 }

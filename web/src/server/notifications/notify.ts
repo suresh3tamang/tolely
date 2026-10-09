@@ -3,7 +3,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { users } from "@/server/collections";
 import { messaging } from "@/server/firebase";
 
-type Message = { titleEn: string; titleNe: string; bodyEn: string; bodyNe: string; bookingId?: string };
+export type Message = { titleEn: string; titleNe: string; bodyEn: string; bodyNe: string; bookingId?: string; type?: string };
 
 // Notifications are best-effort: a failure here must never fail the request.
 

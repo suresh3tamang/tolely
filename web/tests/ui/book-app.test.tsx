@@ -17,6 +17,7 @@ vi.mock("@/app/book/phone-step", () => ({ PhoneStep: () => <div>STEP: verify pho
 vi.mock("@/app/book/profile-step", () => ({ ProfileStep: () => <div>STEP: profile</div> }));
 vi.mock("@/app/book/new-booking", () => ({ NewBooking: () => <div>STEP: book a service</div> }));
 vi.mock("@/app/book/my-bookings", () => ({ MyBookings: () => <div>STEP: my bookings</div> }));
+vi.mock("@/app/book/notification-bell", () => ({ NotificationBell: () => <button>bell</button> }));
 
 const person = (phoneNumber: string | null = "+9779800000001") =>
   ({ uid: "u1", phoneNumber, displayName: "Suresh Tamang" }) as unknown as User;

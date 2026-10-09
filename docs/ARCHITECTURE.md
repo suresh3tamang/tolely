@@ -233,6 +233,23 @@ The backend sends a push for each booking event (`server/notifications`). The me
 that booking, as the customer or the supplier depending on who is signed in
 (`PushService.onOpenBooking`, set in `SessionGate`).
 
+Every message also goes into the person's **inbox** (`users/{uid}/notifications`), through `tell()` in
+`server/notifications/inbox.ts`; services call `tell`, never `notifyUser` directly. The inbox is the 🔔 bell on
+the website (`notification-bell.tsx`) and in the app (`features/notifications/`): a red count of unseen ones,
+and opening the list marks them seen (`POST /api/me/notifications/seen`), so the count goes away on every
+device. While the website is open, a new one also shows in the tab title ("(1) On the way · Tolely") and, if
+the customer allowed it, as a browser notification when the tab is in the background. (Web push to a closed
+browser would need a service worker and is not set up.)
+
+What customers are told, step by step: accepted (who), on the way, **almost there** (sent once when the
+supplier's shared location is within 500 m, with about how many minutes), **arrived** (supplier taps "I've
+arrived"), completed. Suppliers can also tap **Running late** (15/30/60 min), which tells the customer. A
+check every 10 minutes (`GET /api/cron/late-bookings`, `notifyLateBookings`) finds open bookings whose time
+window is over with nobody on the way, tells the customer once ("delayed") and reminds the supplier; a
+supplier who said they're late gets that much extra time first. The booking keeps `acceptedAt`, `departedAt`,
+`arrivedAt`, `completedAt` for the timeline, and while on the way both apps show the supplier on the map with
+the distance and a rough time to arrive (`etaMinutes`: 1.4 x the straight line at 18 km/h).
+
 ### Firestore collections
 
 | Collection | Document | Written by |

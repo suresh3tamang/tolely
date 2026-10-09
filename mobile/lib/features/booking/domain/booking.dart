@@ -68,6 +68,9 @@ class Booking {
     this.createdAt,
     this.acceptedAt,
     this.departedAt,
+    this.arrivedAt,
+    this.lateByMinutes,
+    this.supplierLocationAt,
     this.completedAt,
     this.cancelledAt,
   });
@@ -112,6 +115,12 @@ class Booking {
       createdAt: time('createdAt'),
       acceptedAt: time('acceptedAt'),
       departedAt: time('departedAt'),
+      arrivedAt: time('arrivedAt'),
+      lateByMinutes: (m['lateByMinutes'] as num?)?.toInt(),
+      supplierLocationAt: switch (m['supplierLocation']) {
+        {'at': final Timestamp at} => at.toDate(),
+        _ => null,
+      },
       completedAt: time('completedAt'),
       cancelledAt: time('cancelledAt'),
     );
@@ -164,6 +173,14 @@ class Booking {
   final LatLng? supplierLocation;
   final DateTime? createdAt;
   final DateTime? acceptedAt;
+  /// When the supplier said they had arrived (still on the way until they mark the job done).
+  final DateTime? arrivedAt;
+
+  /// The supplier said they would be this many minutes late.
+  final int? lateByMinutes;
+
+  /// When [supplierLocation] was last updated.
+  final DateTime? supplierLocationAt;
   final DateTime? departedAt;
   final DateTime? completedAt;
   final DateTime? cancelledAt;

@@ -19,6 +19,8 @@ import 'package:tolely/features/profile/domain/user_profile.dart';
 import 'package:tolely/features/supplier/data/supplier_repository.dart';
 import 'package:tolely/features/voice/data/voice_repository.dart';
 import 'package:tolely/features/map/data/places_repository.dart';
+import 'package:tolely/features/notifications/data/notifications_repository.dart';
+import 'package:tolely/features/notifications/domain/app_notification.dart';
 import 'package:tolely/core/services/speech_service.dart';
 
 class MockAuth extends Mock implements AuthRepository {}
@@ -49,6 +51,8 @@ class MockLocation extends Mock implements LocationService {}
 class MockVoice extends Mock implements VoiceRepository {}
 
 class MockPlaces extends Mock implements PlacesRepository {}
+
+class MockNotifications extends Mock implements NotificationsRepository {}
 
 /// Speech recognition that "hears" whatever the test says.
 class FakeSpeech implements SpeechService {
@@ -125,6 +129,8 @@ class Fakes {
         .thenAnswer((_) => Stream.value(const []));
     when(() => bookings.watchOnTheWayJobIds(any())).thenAnswer((_) => Stream.value(const []));
     when(() => bookings.lastPickedLocation).thenReturn(null);
+    when(() => notifications.watch(any(), limit: any(named: 'limit'))).thenAnswer((_) => Stream.value(const <AppNotification>[]));
+    when(() => notifications.markSeen(any())).thenAnswer((_) async {});
   }
 
   final auth = MockAuth();
@@ -137,6 +143,7 @@ class Fakes {
   final voice = MockVoice();
   final speech = FakeSpeech();
   final places = MockPlaces();
+  final notifications = MockNotifications();
 
   List<Service> services = [tanker, plumber];
 }
@@ -182,6 +189,9 @@ Booking booking({
   int supplierRatingCount = 0,
   int supplierJobs = 0,
   DateTime? scheduledFor,
+  DateTime? arrivedAt,
+  int? lateByMinutes,
+  LatLng? supplierLocation,
 }) => Booking(
   id: id,
   status: status,
@@ -198,6 +208,9 @@ Booking booking({
   supplierName: supplierName,
   rating: rating,
   location: location,
+  arrivedAt: arrivedAt,
+  lateByMinutes: lateByMinutes,
+  supplierLocation: supplierLocation,
   platformFeePercent: feePercent,
   supplierRating: supplierRating,
   supplierRatingCount: supplierRatingCount,
@@ -223,6 +236,7 @@ Future<LocaleController> pumpScreen(WidgetTester tester, Widget home, Fakes fake
         Provider<VoiceRepository>.value(value: fakes.voice),
         Provider<SpeechService>.value(value: fakes.speech),
         Provider<PlacesRepository>.value(value: fakes.places),
+        Provider<NotificationsRepository>.value(value: fakes.notifications),
         ChangeNotifierProvider<LocaleController>.value(value: locale),
       ],
       child: TolelyApp(home: home),

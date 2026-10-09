@@ -11,6 +11,7 @@ import 'package:tolely/features/customer/presentation/active_booking_card.dart';
 import 'package:tolely/features/customer/presentation/service_tile.dart';
 import 'package:tolely/features/customer/presentation/tip_banner.dart';
 import 'package:tolely/features/voice/domain/voice_draft.dart';
+import 'package:tolely/features/notifications/presentation/notification_bell.dart';
 import 'package:tolely/features/profile/domain/user_profile.dart';
 import 'package:tolely/features/voice/presentation/voice_card.dart';
 import 'package:tolely/features/voice/presentation/voice_sheet.dart';
@@ -105,6 +106,7 @@ class _HomeTabState extends State<HomeTab> {
                     ],
                   ),
                 ),
+                const NotificationBell(),
                 const LanguageButton(),
               ],
             ),

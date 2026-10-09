@@ -10,6 +10,7 @@ import { useAuthUser } from "@/client/use-auth-user";
 import { Button, Card, ToastProvider } from "@/components/ui";
 import { LanguageToggle } from "./language-toggle";
 import { MyBookings } from "./my-bookings";
+import { NotificationBell } from "./notification-bell";
 import { NewBooking } from "./new-booking";
 import { PhoneStep } from "./phone-step";
 import { ProfileStep } from "./profile-step";
@@ -129,6 +130,7 @@ function SignedIn({ user }: { user: User }) {
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-sky-900">{t("hello", { name: profile.name.split(" ")[0] })}</h1>
         <div className="flex items-center gap-2">
+          <NotificationBell uid={user.uid} onOpenBooking={() => setTab("bookings")} />
           <LanguageToggle />
           {leave}
         </div>

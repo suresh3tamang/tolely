@@ -434,4 +434,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noPlaces => 'No place found. Try another spelling, or move the map.';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get noNotifications => 'No notifications yet. Every update about your bookings shows here.';
+
+  @override
+  String get stepArrived => 'Arrived';
+
+  @override
+  String get iHaveArrived => 'I\'ve arrived';
+
+  @override
+  String get runningLate => 'Running late';
+
+  @override
+  String get howLate => 'How late will you be?';
+
+  @override
+  String lateMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get lateTold => 'The customer has been told.';
+
+  @override
+  String etaAway(int minutes, String km) {
+    return 'About $minutes min away · $km km';
+  }
+
+  @override
+  String arrivedNote(String name) {
+    return '$name has arrived at your place.';
+  }
+
+  @override
+  String lateNote(int minutes) {
+    return 'Running about $minutes min late';
+  }
+
+  @override
+  String get delayedNote => 'Delayed: the booked time has passed';
+
+  @override
+  String get arrivedChip => 'Arrived';
 }

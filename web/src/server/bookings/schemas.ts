@@ -26,4 +26,7 @@ export const RateSchema = z.object({
 
 export const ReportSchema = z.object({ message: z.string().trim().min(5, "Please describe the problem").max(1000) });
 
+/** "Running late": how many minutes, from the choices the app offers. */
+export const LateSchema = z.object({ minutes: z.number().int().min(5).max(180) });
+
 export type CreateBookingInput = z.infer<typeof CreateBookingSchema>;

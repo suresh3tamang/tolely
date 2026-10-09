@@ -134,5 +134,11 @@ class BookingRepository {
       _api.post('/api/bookings/$id/status', {'status': status.wire});
 
   /// Live position of the supplier while on the way.
+  /// The supplier says they have arrived; the customer is told.
+  Future<void> markArrived(String id) => _api.post('/api/bookings/$id/arrived');
+
+  /// The supplier says they will be [minutes] late; the customer is told.
+  Future<void> reportLate(String id, int minutes) => _api.post('/api/bookings/$id/late', {'minutes': minutes});
+
   Future<void> shareLocation(String id, LatLng at) => _api.post('/api/bookings/$id/location', latLngToJson(at));
 }

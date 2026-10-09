@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tolely/core/utils/format.dart';
 
 /// Holds the app language, remembers it between launches, and tells the
 /// server about changes (so push notifications arrive in the same language).
@@ -7,7 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// MaterialApp's `locale` follows [locale]; every widget that reads
 /// `context.l10n` rebuilds when it changes.
 class LocaleController extends ChangeNotifier {
-  LocaleController._(this._prefs, this._locale, this.onChanged);
+  LocaleController._(this._prefs, this._locale, this.onChanged) {
+    dateLanguage = _locale.languageCode; // dates follow the app language
+  }
 
   /// Languages the app is translated into. The first one is the default.
   /// To add one: create lib/l10n/app_<code>.arb and add its code here.
@@ -37,6 +40,7 @@ class LocaleController extends ChangeNotifier {
     final next = _fromCode(code);
     if (next == _locale) return;
     _locale = next;
+    dateLanguage = next.languageCode;
     notifyListeners();
     await _prefs.setString(_prefsKey, next.languageCode);
     if (sync) {

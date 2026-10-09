@@ -98,7 +98,7 @@ class _BookScreenState extends State<BookScreen> {
     final today = dayOf(DateTime.now());
     if (d == today) return context.l10n.today;
     if (d == today.add(const Duration(days: 1))) return context.l10n.tomorrow;
-    return formatDayTime(d).split(',').first;
+    return formatDay(d);
   }
 
   Future<void> _pickOtherDay() async {

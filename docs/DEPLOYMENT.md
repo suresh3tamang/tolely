@@ -18,6 +18,10 @@ Any Node host works; these steps use [Vercel](https://vercel.com).
    `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, and the four
    `NEXT_PUBLIC_FIREBASE_*` values. The private key can be pasted as it is (multi-line) or with `\n`.
    Also set `ANTHROPIC_API_KEY` (optional: smarter, paid voice booking; free word rules work without it) and `PLACES_USER_AGENT` (place search, with a contact address).
+   Set `CRON_SECRET` (any long random text) for the late-booking check. `web/vercel.json` asks Vercel to call
+   `/api/cron/late-bookings` every 10 minutes; Vercel's free Hobby plan only runs crons once a day, so on Hobby
+   use a free scheduler such as cron-job.org instead: GET `https://<your-domain>/api/cron/late-bookings` every
+   10 minutes with the header `Authorization: Bearer <CRON_SECRET>`.
 4. Deploy, then open `https://your-domain/api/services`. It should list the services.
 5. Firebase console → Authentication → Settings → **Authorized domains** → add your domain.
 6. Fill in `web/src/config/site.ts` (phone, email, Facebook, store links) and redeploy.
