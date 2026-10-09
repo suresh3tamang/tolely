@@ -13,6 +13,7 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1",
     "firebase": "^13.0.0",
     "firebase-admin": "^14.5.0",
     "leaflet": "^1.9.4",

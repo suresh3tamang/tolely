@@ -13,15 +13,15 @@ export function csvCell(value: unknown): string {
 }
 
 const HEADER = [
-  "Booking id", "Created", "Scheduled", "Status", "Service", "Option", "Customer", "Customer phone",
+  "Booking id", "Created", "Scheduled", "Until", "Status", "Service", "Option", "Customer", "Customer phone", "Contact person", "Contact phone",
   "Supplier", "Price (Rs)", "Fee (Rs)", "Supplier earns (Rs)", "Payment", "Rating",
 ];
 
 /** Bookings as CSV text (for Excel / Google Sheets). */
 export function bookingsToCsv(bookings: Booking[]): string {
   const rows = bookings.map((b) => [
-    b.id, b.createdAt, b.scheduledFor, b.status, b.serviceNameEn, b.optionLabelEn,
-    b.customerName, b.customerPhone, b.supplierName ?? "", b.price,
+    b.id, b.createdAt, b.scheduledFor, b.scheduledEnd ?? "", b.status, b.serviceNameEn, b.optionLabelEn,
+    b.customerName, b.customerPhone, b.contactName ?? "", b.contactPhone ?? "", b.supplierName ?? "", b.price,
     b.platformFee ?? "", b.supplierEarning ?? "", b.paymentMethod, b.rating ?? "",
   ]);
   return [HEADER, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");

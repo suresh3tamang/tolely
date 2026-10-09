@@ -17,6 +17,7 @@ Any Node host works; these steps use [Vercel](https://vercel.com).
 3. Add the **environment variables** from `web/.env.example` (Project Settings → Environment Variables):
    `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, and the four
    `NEXT_PUBLIC_FIREBASE_*` values. The private key can be pasted as it is (multi-line) or with `\n`.
+   Also set `ANTHROPIC_API_KEY` (optional: smarter, paid voice booking; free word rules work without it) and `PLACES_USER_AGENT` (place search, with a contact address).
 4. Deploy, then open `https://your-domain/api/services`. It should list the services.
 5. Firebase console → Authentication → Settings → **Authorized domains** → add your domain.
 6. Fill in `web/src/config/site.ts` (phone, email, Facebook, store links) and redeploy.

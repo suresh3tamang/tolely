@@ -359,4 +359,80 @@ class AppLocalizationsNe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count काम', one: '१ काम');
     return '$_temp0';
   }
+
+  @override
+  String get today => 'आज';
+
+  @override
+  String get tomorrow => 'भोलि';
+
+  @override
+  String get otherDate => 'अर्को मिति';
+
+  @override
+  String get asap => 'सकेसम्म चाँडो';
+
+  @override
+  String get noSlotsToday => 'आज समय बाँकी छैन। अर्को दिन छान्नुहोस्।';
+
+  @override
+  String get chooseTime => 'समय छान्नुहोस्';
+
+  @override
+  String get contactTitle => 'सप्लायरले कसलाई सम्पर्क गर्ने?';
+
+  @override
+  String get contactName => 'सम्पर्क व्यक्ति';
+
+  @override
+  String get contactPhone => 'सम्पर्क फोन';
+
+  @override
+  String get contactHint =>
+      'सप्लायरले यही नम्बरमा फोन गर्नेछ। तपाईं घरमा हुनुहुन्न भने अर्को व्यक्तिको नम्बर राख्नुहोस्।';
+
+  @override
+  String get contactInvalid => '८ देखि १० अंकको फोन नम्बर हाल्नुहोस्।';
+
+  @override
+  String get timeExpired => 'त्यो समय बितिसक्यो। फेरि छान्नुहोस्।';
+
+  @override
+  String get voiceTitle => 'बोलेर बुक गर्नुहोस्';
+
+  @override
+  String get voiceHint => 'के चाहिएको भन्नुहोस्, जस्तै “प्लम्बर चाहियो आजै”';
+
+  @override
+  String get voicePlaceholder => 'वा यहाँ टाइप गर्नुहोस्';
+
+  @override
+  String get voiceListening => 'सुन्दैछ… अब बोल्नुहोस्';
+
+  @override
+  String get voiceThinking => 'बुझ्दैछ…';
+
+  @override
+  String get voiceNotHeard => 'राम्ररी सुनिएन। माइक थिचेर फेरि बोल्नुहोस्, वा टाइप गर्नुहोस्।';
+
+  @override
+  String get micBlocked => 'आवाज चलेन। सेटिङमा माइकको अनुमति दिनुहोस्, वा टाइप गर्नुहोस्।';
+
+  @override
+  String get voiceReady => 'विवरण जाँचेर पक्का गर्नुहोस्';
+
+  @override
+  String get voiceSend => 'बुझ्नुहोस्';
+
+  @override
+  String get voiceTapToSpeak => 'बोल्न थिच्नुहोस्';
+
+  @override
+  String get searchPlace => 'ठाउँ खोज्नुहोस्, जस्तै बालकोट चोक';
+
+  @override
+  String get searchByVoice => 'ठाउँको नाम बोल्नुहोस्';
+
+  @override
+  String get noPlaces => 'ठाउँ फेला परेन। अर्को हिज्जे प्रयोग गर्नुहोस्, वा नक्सा सार्नुहोस्।';
 }

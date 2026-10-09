@@ -359,4 +359,79 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count jobs', one: '1 job');
     return '$_temp0';
   }
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get tomorrow => 'Tomorrow';
+
+  @override
+  String get otherDate => 'Other date';
+
+  @override
+  String get asap => 'As soon as possible';
+
+  @override
+  String get noSlotsToday => 'No time left today. Please pick another day.';
+
+  @override
+  String get chooseTime => 'Choose a time';
+
+  @override
+  String get contactTitle => 'Who should the supplier contact?';
+
+  @override
+  String get contactName => 'Contact person';
+
+  @override
+  String get contactPhone => 'Contact phone';
+
+  @override
+  String get contactHint => 'The supplier will call this number. Use another person\'s if you won\'t be home.';
+
+  @override
+  String get contactInvalid => 'Enter a phone number with 8 to 10 digits.';
+
+  @override
+  String get timeExpired => 'That time has passed. Please choose again.';
+
+  @override
+  String get voiceTitle => 'Book by voice';
+
+  @override
+  String get voiceHint => 'Say what you need, e.g. “plumber chaiyo aaja nai”';
+
+  @override
+  String get voicePlaceholder => 'Or type it here';
+
+  @override
+  String get voiceListening => 'Listening… speak now';
+
+  @override
+  String get voiceThinking => 'Understanding…';
+
+  @override
+  String get voiceNotHeard => 'I didn\'t catch that. Tap the mic and try again, or type it.';
+
+  @override
+  String get micBlocked => 'Voice is not available. Allow the microphone in Settings, or type instead.';
+
+  @override
+  String get voiceReady => 'Check the details and confirm';
+
+  @override
+  String get voiceSend => 'Understand';
+
+  @override
+  String get voiceTapToSpeak => 'Tap to speak';
+
+  @override
+  String get searchPlace => 'Search a place, e.g. Balkot Chowk';
+
+  @override
+  String get searchByVoice => 'Say the place';
+
+  @override
+  String get noPlaces => 'No place found. Try another spelling, or move the map.';
 }

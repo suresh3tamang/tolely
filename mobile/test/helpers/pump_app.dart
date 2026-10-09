@@ -17,6 +17,9 @@ import 'package:tolely/features/catalog/domain/service.dart';
 import 'package:tolely/features/profile/data/profile_repository.dart';
 import 'package:tolely/features/profile/domain/user_profile.dart';
 import 'package:tolely/features/supplier/data/supplier_repository.dart';
+import 'package:tolely/features/voice/data/voice_repository.dart';
+import 'package:tolely/features/map/data/places_repository.dart';
+import 'package:tolely/core/services/speech_service.dart';
 
 class MockAuth extends Mock implements AuthRepository {}
 
@@ -43,6 +46,47 @@ class SpyPush extends MockPush {
 
 class MockLocation extends Mock implements LocationService {}
 
+class MockVoice extends Mock implements VoiceRepository {}
+
+class MockPlaces extends Mock implements PlacesRepository {}
+
+/// Speech recognition that "hears" whatever the test says.
+class FakeSpeech implements SpeechService {
+  bool available = true;
+  bool listening = false;
+  void Function(String words, bool isFinal)? _onWords;
+  void Function()? _onDone;
+
+  /// Pretends the person said [words] and stopped talking.
+  void say(String words) {
+    _onWords?.call(words, true);
+    listening = false;
+    _onDone?.call();
+  }
+
+  @override
+  Future<bool> start({
+    required String localeId,
+    required void Function(String words, bool isFinal) onWords,
+    required void Function(String error) onError,
+    required void Function() onDone,
+  }) async {
+    if (!available) return false;
+    listening = true;
+    _onWords = onWords;
+    _onDone = onDone;
+    return true;
+  }
+
+  @override
+  Future<void> stop() async => listening = false;
+
+  final spoken = <String>[];
+
+  @override
+  Future<void> speak(String text, {required String language}) async => spoken.add(text);
+}
+
 /// Fake data sources for screen tests. Screens read these through Provider,
 /// exactly like the real app, so wiring mistakes show up here.
 class Fakes {
@@ -57,6 +101,9 @@ class Fakes {
         optionId: 'x',
         address: 'x',
         scheduledFor: DateTime(2026),
+        scheduledEnd: DateTime(2026),
+        contactName: 'x',
+        contactPhone: '9800000001',
         paymentMethod: PaymentMethod.cash,
       ),
     );
@@ -87,6 +134,9 @@ class Fakes {
   final suppliers = MockSuppliers();
   final push = SpyPush();
   final location = MockLocation();
+  final voice = MockVoice();
+  final speech = FakeSpeech();
+  final places = MockPlaces();
 
   List<Service> services = [tanker, plumber];
 }
@@ -116,6 +166,7 @@ const customerProfile = UserProfile(
   name: 'Suresh Tamang',
   address: 'Balkot, Bhaktapur',
   landmark: 'Near the temple',
+  phone: '+9779800000001',
 );
 
 Booking booking({
@@ -169,6 +220,9 @@ Future<LocaleController> pumpScreen(WidgetTester tester, Widget home, Fakes fake
         Provider<SupplierRepository>.value(value: fakes.suppliers),
         Provider<PushService>.value(value: fakes.push),
         Provider<LocationService>.value(value: fakes.location),
+        Provider<VoiceRepository>.value(value: fakes.voice),
+        Provider<SpeechService>.value(value: fakes.speech),
+        Provider<PlacesRepository>.value(value: fakes.places),
         ChangeNotifierProvider<LocaleController>.value(value: locale),
       ],
       child: TolelyApp(home: home),

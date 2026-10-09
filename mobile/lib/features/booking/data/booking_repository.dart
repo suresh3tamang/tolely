@@ -11,6 +11,9 @@ class NewBooking {
     required this.optionId,
     required this.address,
     required this.scheduledFor,
+    required this.scheduledEnd,
+    required this.contactName,
+    required this.contactPhone,
     required this.paymentMethod,
     this.landmark = '',
     this.note = '',
@@ -22,6 +25,11 @@ class NewBooking {
   final String address;
   final String landmark;
   final DateTime scheduledFor;
+  final DateTime scheduledEnd;
+  final String contactName;
+
+  /// Local digits only, e.g. `9800000001`; sent as `+977...`.
+  final String contactPhone;
   final PaymentMethod paymentMethod;
   final String note;
   final LatLng? location;
@@ -32,6 +40,9 @@ class NewBooking {
     'address': address,
     'landmark': landmark,
     'scheduledFor': scheduledFor.toUtc().toIso8601String(),
+    'scheduledEnd': scheduledEnd.toUtc().toIso8601String(),
+    'contactName': contactName,
+    'contactPhone': '+977$contactPhone',
     'paymentMethod': paymentMethod.wire,
     'note': note,
     'location': location == null ? null : latLngToJson(location!),

@@ -94,11 +94,18 @@ export function BookingsTable({ bookings, onCancel }: { bookings: Booking[]; onC
                             <MapPin className="size-3" /> View on map
                           </a>
                         )}
+                        {b.contactPhone && b.contactPhone !== b.customerPhone && (
+                          <p className="flex items-center gap-1 text-slate-500">
+                            <Phone className="size-3" />Contact: {b.contactName} {b.contactPhone}
+                          </p>
+                        )}
                         {b.note && <p className="mt-1 text-xs italic text-slate-500">“{b.note}”</p>}
                       </div>
                     </div>
                   </td>
-                  <td className={`${td} whitespace-nowrap text-slate-700`}>{formatDate(b.scheduledFor)}</td>
+                  <td className={`${td} whitespace-nowrap text-slate-700`}>{formatDate(b.scheduledFor)}
+                    {b.scheduledEnd && <span className="block text-xs text-slate-500">until {new Date(b.scheduledEnd).toLocaleTimeString("en-GB", { hour: "numeric", minute: "2-digit" })}</span>}
+                  </td>
                   <td className={td}>
                     {b.supplierName ? (
                       <>

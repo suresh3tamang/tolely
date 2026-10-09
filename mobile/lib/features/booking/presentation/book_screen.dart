@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:tolely/core/l10n/l10n.dart';
+import 'package:tolely/core/services/location_service.dart';
 import 'package:tolely/core/utils/format.dart';
+import 'package:tolely/core/utils/schedule.dart';
 import 'package:tolely/core/widgets/feedback.dart';
 import 'package:tolely/features/booking/data/booking_repository.dart';
 import 'package:tolely/features/booking/domain/booking.dart';
@@ -11,12 +14,13 @@ import 'package:tolely/features/catalog/domain/service.dart';
 import 'package:tolely/features/map/presentation/booking_map.dart';
 import 'package:tolely/features/map/presentation/location_picker_screen.dart';
 import 'package:tolely/features/profile/domain/user_profile.dart';
+import 'package:tolely/features/voice/domain/voice_draft.dart';
 
 /// Booking form: option, time, address, payment. The price shown here is the
 /// catalog price from the server, which also re-checks it when booking.
 /// Closes with `true` after a successful booking.
 class BookScreen extends StatefulWidget {
-  const BookScreen({super.key, required this.service, required this.profile, this.optionId, this.location});
+  const BookScreen({super.key, required this.service, required this.profile, this.optionId, this.location, this.draft});
 
   final Service service;
   final UserProfile profile;
@@ -25,28 +29,43 @@ class BookScreen extends StatefulWidget {
   final String? optionId;
   final LatLng? location;
 
+  /// Filled in from what the customer said ("book by voice"); they check it and confirm here.
+  final VoiceDraft? draft;
+
   @override
   State<BookScreen> createState() => _BookScreenState();
 }
 
 class _BookScreenState extends State<BookScreen> {
   late ServiceOption _option = widget.service.options.firstWhere(
-    (o) => o.id == widget.optionId,
+    (o) => o.id == (widget.draft?.optionId ?? widget.optionId),
     orElse: () => widget.service.options.first,
   );
   late final _address = TextEditingController(text: widget.profile.address);
   late final _landmark = TextEditingController(text: widget.profile.landmark);
-  final _note = TextEditingController();
+  late final _note = TextEditingController(text: widget.draft?.note ?? '');
   late LatLng? _location;
   PaymentMethod _payment = PaymentMethod.cash;
   bool _busy = false;
-  DateTime _when = _nextSlot();
+  // The day and time window ("12 PM – 3 PM"). Today if anything is left of it, otherwise tomorrow.
+  late DateTime _day = widget.draft?.date ?? _firstDay();
+  late TimeSlot? _slot = _draftSlot();
+  late bool _otherDay = widget.draft?.date != null && widget.draft!.date!.difference(dayOf(DateTime.now())).inDays > 1;
+  late final _contactName = TextEditingController(text: widget.draft?.contactName ?? widget.profile.name);
+  late final _contactPhone = TextEditingController(text: widget.draft?.contactPhone ?? _localDigits(widget.profile.phone));
 
   @override
   void initState() {
     super.initState();
     // Starts from the pin of this customer's last booking.
     _location = widget.location ?? context.read<BookingRepository>().lastPickedLocation;
+    // Said "mero ghar ma" / "yahi" when booking by voice: pin where they are now.
+    if (widget.draft?.atCurrentLocation ?? false) _pinCurrentLocation();
+  }
+
+  Future<void> _pinCurrentLocation() async {
+    final here = await context.read<LocationService>().currentPosition();
+    if (here != null && mounted) setState(() => _location = here);
   }
 
   @override
@@ -54,26 +73,48 @@ class _BookScreenState extends State<BookScreen> {
     _address.dispose();
     _landmark.dispose();
     _note.dispose();
+    _contactName.dispose();
+    _contactPhone.dispose();
     super.dispose();
   }
 
-  // Next whole hour at least one hour from now.
-  static DateTime _nextSlot() {
-    final t = DateTime.now().add(const Duration(hours: 2));
-    return DateTime(t.year, t.month, t.day, t.hour);
+  /// The window the customer said, if it can still be booked on that day.
+  TimeSlot? _draftSlot() {
+    final slot = widget.draft?.slot;
+    return slot != null && availableSlots(_day, DateTime.now()).contains(slot) ? slot : null;
   }
 
-  Future<void> _pickTime() async {
+  static DateTime _firstDay() {
+    final now = DateTime.now();
+    return availableSlots(now, now).isNotEmpty ? dayOf(now) : dayOf(now).add(const Duration(days: 1));
+  }
+
+  /// `+9779800000001` -> `9800000001`.
+  static String _localDigits(String? phone) => (phone ?? '').replaceFirst('+977', '').replaceAll(RegExp(r'\D'), '');
+
+  bool get _phoneOk => _contactPhone.text.length >= 8 && _contactPhone.text.length <= 10;
+
+  String _dayName(DateTime d) {
+    final today = dayOf(DateTime.now());
+    if (d == today) return context.l10n.today;
+    if (d == today.add(const Duration(days: 1))) return context.l10n.tomorrow;
+    return formatDayTime(d).split(',').first;
+  }
+
+  Future<void> _pickOtherDay() async {
+    final now = DateTime.now();
     final date = await showDatePicker(
       context: context,
-      initialDate: _when,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 29)),
+      initialDate: _day,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: bookAheadDays)),
     );
     if (date == null || !mounted) return;
-    final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_when));
-    if (time == null) return;
-    setState(() => _when = DateTime(date.year, date.month, date.day, time.hour, time.minute));
+    setState(() {
+      _otherDay = true;
+      _day = dayOf(date);
+      _slot = null;
+    });
   }
 
   Future<void> _pickLocation() async {
@@ -87,6 +128,8 @@ class _BookScreenState extends State<BookScreen> {
   Future<void> _book() async {
     final l10n = context.l10n;
     if (_address.text.trim().isEmpty) return showMessage(context, '${l10n.address}: ${l10n.required}');
+    final window = _slot == null ? null : windowFor(_day, _slot!, DateTime.now()); // re-checked: the form may have been open a while
+    if (window == null) return showMessage(context, l10n.timeExpired);
     setState(() => _busy = true);
     try {
       await context.read<BookingRepository>().create(
@@ -95,7 +138,10 @@ class _BookScreenState extends State<BookScreen> {
           optionId: _option.id,
           address: _address.text.trim(),
           landmark: _landmark.text.trim(),
-          scheduledFor: _when,
+          scheduledFor: window.start,
+          scheduledEnd: window.end,
+          contactName: _contactName.text.trim(),
+          contactPhone: _contactPhone.text,
           paymentMethod: _payment,
           note: _note.text.trim(),
           location: _location,
@@ -120,6 +166,28 @@ class _BookScreenState extends State<BookScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (widget.draft != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(12)),
+              child: Row(
+                children: [
+                  const Icon(Icons.mic_rounded, color: Colors.blue),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.voiceReady, style: text.labelLarge),
+                        if (widget.draft!.reply.isNotEmpty) Text(widget.draft!.reply, style: text.bodyMedium),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           Text(l10n.chooseOption, style: text.titleMedium),
           RadioGroup<String>(
             groupValue: _option.id,
@@ -137,13 +205,67 @@ class _BookScreenState extends State<BookScreen> {
           ),
           const SizedBox(height: 8),
           Text(l10n.when, style: text.titleMedium),
-          ListTile(
-            leading: const Icon(Icons.schedule),
-            title: Text(formatDateTime(_when)),
-            trailing: const Icon(Icons.edit),
-            onTap: _pickTime,
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final d in [dayOf(DateTime.now()), dayOf(DateTime.now()).add(const Duration(days: 1))])
+                ChoiceChip(
+                  label: Text(_dayName(d)),
+                  selected: !_otherDay && _day == d,
+                  onSelected: (_) => setState(() {
+                    _otherDay = false;
+                    _day = d;
+                    _slot = null;
+                  }),
+                ),
+              ChoiceChip(
+                label: Text(_otherDay ? _dayName(_day) : l10n.otherDate),
+                selected: _otherDay,
+                onSelected: (_) => _pickOtherDay(),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final s in availableSlots(_day, DateTime.now()))
+                ChoiceChip(
+                  label: Text(s.isAsap ? l10n.asap : slotText(s)),
+                  selected: _slot == s,
+                  onSelected: (_) => setState(() => _slot = s),
+                ),
+            ],
+          ),
+          if (availableSlots(_day, DateTime.now()).isEmpty)
+            Padding(padding: const EdgeInsets.only(top: 4), child: Text(l10n.noSlotsToday, style: text.bodySmall)),
+          const SizedBox(height: 16),
+          Text(l10n.contactTitle, style: text.titleMedium),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _contactName,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(labelText: l10n.contactName),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _contactPhone,
+            keyboardType: TextInputType.phone,
+            maxLength: 10,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: l10n.contactPhone,
+              prefixText: '+977 ',
+              helperText: l10n.contactHint,
+              helperMaxLines: 2,
+              errorText: _contactPhone.text.isNotEmpty && !_phoneOk ? l10n.contactInvalid : null,
+              counterText: '',
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 12),
           TextField(
             controller: _address,
             decoration: InputDecoration(labelText: l10n.address),
@@ -209,7 +331,7 @@ class _BookScreenState extends State<BookScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: FilledButton(
-            onPressed: _busy ? null : _book,
+            onPressed: _busy || _slot == null || _contactName.text.trim().length < 2 || !_phoneOk ? null : _book,
             child: Text('${l10n.confirmBooking} · ${rupees(_option.price)}'),
           ),
         ),

@@ -7,11 +7,14 @@ import 'package:tolely/core/navigation/root_keys.dart';
 import 'package:tolely/core/network/api_client.dart';
 import 'package:tolely/core/services/location_service.dart';
 import 'package:tolely/core/services/push_service.dart';
+import 'package:tolely/core/services/speech_service.dart';
 import 'package:tolely/features/auth/data/auth_repository.dart';
 import 'package:tolely/features/booking/data/booking_repository.dart';
 import 'package:tolely/features/catalog/data/catalog_repository.dart';
+import 'package:tolely/features/map/data/places_repository.dart';
 import 'package:tolely/features/profile/data/profile_repository.dart';
 import 'package:tolely/features/supplier/data/supplier_repository.dart';
+import 'package:tolely/features/voice/data/voice_repository.dart';
 
 /// Everything the app shares, created once at start-up.
 ///
@@ -29,6 +32,9 @@ class AppDependencies {
     required this.push,
     required this.locale,
     required this.location,
+    required this.voice,
+    required this.speech,
+    required this.places,
   });
 
   static Future<AppDependencies> create() async {
@@ -70,6 +76,9 @@ class AppDependencies {
       push: push,
       locale: locale,
       location: const LocationService(),
+      voice: VoiceRepository(api),
+      speech: DeviceSpeechService(),
+      places: PlacesRepository(api),
     );
   }
 
@@ -82,6 +91,9 @@ class AppDependencies {
   final PushService push;
   final LocaleController locale;
   final LocationService location;
+  final VoiceRepository voice;
+  final SpeechService speech;
+  final PlacesRepository places;
 
   /// Wraps [child] so every screen can read these.
   Widget provide({required Widget child}) => MultiProvider(
@@ -94,6 +106,9 @@ class AppDependencies {
       Provider<BookingRepository>.value(value: bookings),
       Provider<PushService>.value(value: push),
       Provider<LocationService>.value(value: location),
+      Provider<VoiceRepository>.value(value: voice),
+      Provider<SpeechService>.value(value: speech),
+      Provider<PlacesRepository>.value(value: places),
       ChangeNotifierProvider<LocaleController>.value(value: locale),
     ],
     child: child,

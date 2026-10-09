@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiFetch } from "@/client/firebase";
@@ -274,5 +274,100 @@ describe("booking form", () => {
     vi.stubGlobal("fetch", vi.fn(async () => ({ json: async () => ({ services: [] }) })));
     show();
     expect(await screen.findByText("No services are available right now.")).toBeTruthy();
+  });
+
+  describe("booking by voice", () => {
+    const tomorrowKey = () => {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    const draft = (extra = {}) => ({
+      understood: true, serviceKey: "tanker", optionId: "8000L", date: tomorrowKey(), slot: "12-15",
+      contactName: null, contactPhone: null, note: "4th floor", reply: "Water tanker 8,000 L tomorrow 12-3 PM.", ask: null, choices: [], ...extra,
+    });
+
+    function answer(d: object) {
+      vi.mocked(apiFetch).mockImplementation(async (path: string) =>
+        (path === "/api/voice/parse" ? { draft: d, heard: "x" } : { id: "b1", price: 3200 }) as never,
+      );
+    }
+
+    it("fills in the form from what was said and asks to confirm", async () => {
+      answer(draft());
+      show();
+      const user = userEvent.setup();
+      await screen.findByText("Water Tanker");
+      await user.type(screen.getByLabelText("e.g. plumber chaiyo aaja nai"), "8000 litre tanker bholi diuso{Enter}");
+
+      expect(await screen.findByText("Check and confirm")).toBeTruthy();
+      const sent = JSON.parse(vi.mocked(apiFetch).mock.calls[0][1]!.body as string);
+      expect(sent).toMatchObject({ text: "8000 litre tanker bholi diuso", lang: "en" });
+      expect(sent.today).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(screen.getByText("Water tanker 8,000 L tomorrow 12-3 PM.")).toBeTruthy();
+      // the form below follows: the option, the day and the window are selected
+      expect((screen.getByLabelText(/8,000 Liters/) as HTMLInputElement).checked).toBe(true);
+      expect(screen.getByRole("button", { name: "12 PM – 3 PM" }).getAttribute("aria-pressed")).toBe("true");
+      expect(screen.getByDisplayValue("4th floor")).toBeTruthy();
+    });
+
+    it("books only after the customer confirms, with the pin from the map", async () => {
+      answer(draft({ contactName: "Hari", contactPhone: "9811122233" }));
+      show();
+      const user = userEvent.setup();
+      await screen.findByText("Water Tanker");
+      await user.type(screen.getByLabelText("e.g. plumber chaiyo aaja nai"), "tanker bholi{Enter}");
+      await screen.findByText("Check and confirm");
+      expect(vi.mocked(apiFetch).mock.calls.some(([p]) => p === "/api/bookings")).toBe(false); // nothing booked yet
+      expect(screen.getByText("Place the pin on the map, then confirm.")).toBeTruthy();
+
+      await pin(user);
+      const confirms = screen.getAllByRole("button", { name: "Confirm booking" });
+      await user.click(confirms[0]);
+      await waitFor(() => expect(vi.mocked(apiFetch).mock.calls.some(([p]) => p === "/api/bookings")).toBe(true));
+      const booking = vi.mocked(apiFetch).mock.calls.find(([p]) => p === "/api/bookings")!;
+      expect(JSON.parse(booking[1]!.body as string)).toMatchObject({
+        serviceKey: "tanker", optionId: "8000L", contactName: "Hari", contactPhone: "+9779811122233",
+      });
+    });
+
+    it("shows the question when something is missing, and changes nothing", async () => {
+      answer(draft({ understood: false, serviceKey: null, reply: "Which service do you need?", ask: "service", choices: [{ label: "Plumber", value: "plumber" }] }));
+      show();
+      const user = userEvent.setup();
+      await screen.findByText("Water Tanker");
+      await user.type(screen.getByLabelText("e.g. plumber chaiyo aaja nai"), "kei chaiyo{Enter}");
+      expect(await screen.findByText("Which service do you need?")).toBeTruthy();
+      expect(screen.queryByText("Check and confirm")).toBeNull();
+    });
+
+    it("asks what is missing, and a tapped answer continues the same conversation", async () => {
+      const first = draft({ date: null, slot: null, ask: "date", reply: "Water Tanker: which day do you need it?", choices: [{ label: "Tomorrow", value: tomorrowKey() }] });
+      vi.mocked(apiFetch).mockResolvedValueOnce({ draft: first } as never).mockResolvedValueOnce({ draft: draft() } as never);
+      show();
+      const user = userEvent.setup();
+      await screen.findByText("Water Tanker");
+      await user.type(screen.getByLabelText("e.g. plumber chaiyo aaja nai"), "tanker chaiyo{Enter}");
+
+      expect(await screen.findByText("Water Tanker: which day do you need it?")).toBeTruthy();
+      expect(screen.queryByText("Check and confirm")).toBeNull(); // not finished yet
+      const question = screen.getByRole("group", { name: "Water Tanker: which day do you need it?" });
+      await user.click(within(question).getByRole("button", { name: "Tomorrow" }));
+
+      expect(await screen.findByText("Check and confirm")).toBeTruthy();
+      const second = JSON.parse(vi.mocked(apiFetch).mock.calls[1][1]!.body as string);
+      expect(second.choice).toEqual({ ask: "date", value: tomorrowKey() });
+      expect(second.previous).toMatchObject({ serviceKey: "tanker" }); // remembers the first answer
+      expect(second.previous.ask).toBeUndefined();
+    });
+
+    it("shows the server's message when voice booking fails", async () => {
+      vi.mocked(apiFetch).mockRejectedValue(new Error("Voice booking is not set up yet."));
+      show();
+      const user = userEvent.setup();
+      await screen.findByText("Water Tanker");
+      await user.type(screen.getByLabelText("e.g. plumber chaiyo aaja nai"), "plumber{Enter}");
+      expect(await screen.findByText("Voice booking is not set up yet.")).toBeTruthy();
+    });
   });
 });

@@ -1,6 +1,7 @@
 import "server-only";
 import { isInNepal } from "@/shared/geo";
 import { ApiError } from "@/server/http";
+import { queryVariants } from "./query-variants";
 
 // Place search ("Balkot chowk" → a spot on the map) using OpenStreetMap's free Nominatim service.
 //
@@ -125,9 +126,17 @@ export function createPlaceSearch(options: PlaceSearchOptions = {}) {
     const hit = cache.get(key);
     if (hit && now() - hit.at < cacheTtlMs) return hit.places;
 
-    const run = queue.then(() => ask(query, lang));
-    queue = run.catch(() => undefined); // one failed search must not block the next
-    const places = await run;
+    const queued = (q: string) => {
+      const run = queue.then(() => ask(q, lang));
+      queue = run.catch(() => undefined); // one failed search must not block the next
+      return run;
+    };
+    let places = await queued(query);
+    // Nothing found: try other ways of writing it ("बालकोट चोक" -> "बालकोट", "balkot chowk").
+    for (const variant of places.length ? [] : queryVariants(query)) {
+      places = await queued(variant);
+      if (places.length) break;
+    }
 
     if (cache.size >= cacheMax) cache.delete(cache.keys().next().value!); // drop the oldest
     cache.set(key, { at: now(), places });

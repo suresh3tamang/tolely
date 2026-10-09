@@ -10,7 +10,10 @@ import 'package:tolely/features/catalog/domain/service.dart';
 import 'package:tolely/features/customer/presentation/active_booking_card.dart';
 import 'package:tolely/features/customer/presentation/service_tile.dart';
 import 'package:tolely/features/customer/presentation/tip_banner.dart';
+import 'package:tolely/features/voice/domain/voice_draft.dart';
 import 'package:tolely/features/profile/domain/user_profile.dart';
+import 'package:tolely/features/voice/presentation/voice_card.dart';
+import 'package:tolely/features/voice/presentation/voice_sheet.dart';
 
 /// Home: greeting, the active booking, and a tile for each service.
 class HomeTab extends StatefulWidget {
@@ -42,14 +45,23 @@ class _HomeTabState extends State<HomeTab> {
     await next;
   }
 
-  Future<void> _book(Service service) async {
+  Future<void> _book(Service service, {VoiceDraft? draft}) async {
     final booked = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => BookScreen(service: service, profile: widget.profile),
+        builder: (_) => BookScreen(service: service, profile: widget.profile, draft: draft),
       ),
     );
     if (booked == true) widget.onBooked();
+  }
+
+  /// Book by voice: the sheet returns what was understood, and the booking screen opens filled in.
+  Future<void> _bookByVoice() async {
+    final draft = await showVoiceSheet(context);
+    if (draft == null || !mounted) return;
+    final services = await _services;
+    final service = services.where((s) => s.key == draft.serviceKey).firstOrNull;
+    if (service != null && mounted) await _book(service, draft: draft);
   }
 
   @override
@@ -98,6 +110,8 @@ class _HomeTabState extends State<HomeTab> {
             ),
             const SizedBox(height: 20),
             const ActiveBookingCard(),
+            VoiceCard(onTap: _bookByVoice),
+            const SizedBox(height: 20),
             Text(l10n.whatDoYouNeed, style: text.titleLarge),
             const SizedBox(height: 12),
             FutureBuilder<List<Service>>(

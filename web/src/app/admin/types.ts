@@ -19,6 +19,9 @@ export type Booking = {
   supplierEarning?: number;
   location?: { lat: number; lng: number } | null;
   scheduledFor: string;
+  scheduledEnd?: string | null;
+  contactName?: string;
+  contactPhone?: string;
   createdAt: string;
 };
 

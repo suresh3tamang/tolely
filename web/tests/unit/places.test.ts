@@ -98,3 +98,34 @@ describe("rate limiter", () => {
     expect(allow("a")).toBe(true);
   });
 });
+
+describe("other ways to write a spoken place name", () => {
+  it("writes Nepali names in English letters", async () => {
+    const { romanize } = await import("@/server/places/query-variants");
+    expect(romanize("बालकोट")).toBe("balkot");
+    expect(romanize("कोटेश्वर")).toBe("koteshwar");
+    expect(romanize("ठिमी")).toBe("thimi");
+    expect(romanize("गाम्चा")).toBe("gamcha");
+  });
+
+  it("tries in English letters, then without words like 'chowk'", async () => {
+    const { queryVariants } = await import("@/server/places/query-variants");
+    expect(queryVariants("बालकोट चोक")).toEqual(["balkot chowk", "बालकोट"]);
+    expect(queryVariants("Balkot chowk")).toEqual(["Balkot"]);
+    expect(queryVariants("Gamcha")).toEqual([]);
+  });
+
+  it("searches the other spellings when the first finds nothing", async () => {
+    const asked: string[] = [];
+    let t = 0;
+    const fetchImpl = vi.fn(async (url: URL) => {
+      const q = url.searchParams.get("q")!;
+      asked.push(q);
+      return { ok: true, json: async () => (q === "balkot chowk" ? [balkot] : []) } as unknown as Response;
+    });
+    const run = createPlaceSearch({ fetchImpl: fetchImpl as never, now: () => t, sleep: async (ms) => void (t += ms) });
+    const places = await run("बालकोट चोक");
+    expect(asked).toEqual(["बालकोट चोक", "balkot chowk"]);
+    expect(places[0].label).toBe("Balkot Chowk");
+  });
+});

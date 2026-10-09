@@ -115,7 +115,7 @@ export function LocationPicker({ value, onChange }: { value: LatLng | null; onCh
 
   return (
     <div>
-      <PlaceSearch onPick={goTo} />
+      <PlaceSearch onPick={goTo} onHere={locate} />
       <div className="relative overflow-hidden rounded-lg ring-1 ring-slate-200">
         <div ref={box} className="z-0 h-64 w-full sm:h-80 lg:h-[min(55vh,480px)]" />
         {status === "finding" && (

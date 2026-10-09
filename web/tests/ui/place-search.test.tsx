@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiFetch } from "@/client/firebase";
@@ -79,5 +79,46 @@ describe("PlaceSearch", () => {
     expect(await screen.findByRole("button", { name: /^Balkot ChowkSuryabinayak/ }, { timeout: 2000 })).toBeTruthy();
     expect(apiFetch).toHaveBeenCalledTimes(1);
     expect(onPick).not.toHaveBeenCalled();
+  });
+
+  it("searches a place that was said out loud", async () => {
+    // A pretend browser speech recognition that "hears" Balkot chowk.
+    let instance: { lang: string; onresult: (e: unknown) => void; onend: () => void } | null = null;
+    class FakeRecognition {
+      lang = "";
+      interimResults = false;
+      continuous = false;
+      onresult: ((e: unknown) => void) | null = null;
+      onerror = null;
+      onend: (() => void) | null = null;
+      constructor() {
+        instance = this as never;
+      }
+      start() {}
+      stop() {}
+    }
+    vi.stubGlobal("webkitSpeechRecognition", FakeRecognition);
+    vi.mocked(apiFetch).mockResolvedValue({ results: [balkot] });
+    const onPick = vi.fn();
+    renderPage(<PlaceSearch onPick={onPick} />, "ne");
+
+    await userEvent.click(await screen.findByRole("button", { name: "ठाउँको नाम बोल्नुहोस्" }));
+    expect(instance!.lang).toBe("ne-NP");
+    const result = Object.assign([{ transcript: "बालकोट चोक" }], { isFinal: true });
+    act(() => instance!.onresult({ results: [result] }));
+    act(() => instance!.onend());
+
+    await waitFor(() => expect(onPick).toHaveBeenCalledWith(balkot));
+    expect(vi.mocked(apiFetch).mock.calls[0][0]).toBe(`/api/places/search?q=${encodeURIComponent("बालकोट चोक")}&lang=ne`);
+    vi.unstubAllGlobals();
+  });
+
+  it("'mero ghar' or 'yahi' uses the current location instead of searching", async () => {
+    const onHere = vi.fn();
+    renderPage(<PlaceSearch onPick={vi.fn()} onHere={onHere} />);
+    await userEvent.type(screen.getByRole("searchbox"), "aile basirako gharma{Enter}");
+    expect(onHere).toHaveBeenCalledTimes(1);
+    await new Promise((r) => setTimeout(r, 700)); // no suggestions either
+    expect(apiFetch).not.toHaveBeenCalled();
   });
 });

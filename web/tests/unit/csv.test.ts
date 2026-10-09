@@ -51,7 +51,7 @@ describe("CSV export", () => {
     expect(lines).toHaveLength(3);
     expect(lines[0]).toContain("Booking id");
     expect(lines[1]).toBe(
-      "b1,2026-10-09T04:00:00.000Z,2026-10-09T06:00:00.000Z,completed,Water Tanker,\"8,000 Liters\",Suresh Tamang,+9779800000001,Hari,3200,256,2944,cash,5",
+      "b1,2026-10-09T04:00:00.000Z,2026-10-09T06:00:00.000Z,,completed,Water Tanker,\"8,000 Liters\",Suresh Tamang,+9779800000001,,,Hari,3200,256,2944,cash,5",
     );
     expect(lines[2].startsWith("b2,")).toBe(true);
   });

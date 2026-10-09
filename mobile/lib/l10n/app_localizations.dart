@@ -775,6 +775,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 job} other{{count} jobs}}'**
   String jobsCount(int count);
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @tomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow'**
+  String get tomorrow;
+
+  /// No description provided for @otherDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Other date'**
+  String get otherDate;
+
+  /// No description provided for @asap.
+  ///
+  /// In en, this message translates to:
+  /// **'As soon as possible'**
+  String get asap;
+
+  /// No description provided for @noSlotsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'No time left today. Please pick another day.'**
+  String get noSlotsToday;
+
+  /// No description provided for @chooseTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a time'**
+  String get chooseTime;
+
+  /// No description provided for @contactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who should the supplier contact?'**
+  String get contactTitle;
+
+  /// No description provided for @contactName.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact person'**
+  String get contactName;
+
+  /// No description provided for @contactPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact phone'**
+  String get contactPhone;
+
+  /// No description provided for @contactHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The supplier will call this number. Use another person\'s if you won\'t be home.'**
+  String get contactHint;
+
+  /// No description provided for @contactInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a phone number with 8 to 10 digits.'**
+  String get contactInvalid;
+
+  /// No description provided for @timeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'That time has passed. Please choose again.'**
+  String get timeExpired;
+
+  /// No description provided for @voiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Book by voice'**
+  String get voiceTitle;
+
+  /// No description provided for @voiceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Say what you need, e.g. “plumber chaiyo aaja nai”'**
+  String get voiceHint;
+
+  /// No description provided for @voicePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Or type it here'**
+  String get voicePlaceholder;
+
+  /// No description provided for @voiceListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening… speak now'**
+  String get voiceListening;
+
+  /// No description provided for @voiceThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Understanding…'**
+  String get voiceThinking;
+
+  /// No description provided for @voiceNotHeard.
+  ///
+  /// In en, this message translates to:
+  /// **'I didn\'t catch that. Tap the mic and try again, or type it.'**
+  String get voiceNotHeard;
+
+  /// No description provided for @micBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice is not available. Allow the microphone in Settings, or type instead.'**
+  String get micBlocked;
+
+  /// No description provided for @voiceReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the details and confirm'**
+  String get voiceReady;
+
+  /// No description provided for @voiceSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Understand'**
+  String get voiceSend;
+
+  /// No description provided for @voiceTapToSpeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to speak'**
+  String get voiceTapToSpeak;
+
+  /// No description provided for @searchPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Search a place, e.g. Balkot Chowk'**
+  String get searchPlace;
+
+  /// No description provided for @searchByVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Say the place'**
+  String get searchByVoice;
+
+  /// No description provided for @noPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'No place found. Try another spelling, or move the map.'**
+  String get noPlaces;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

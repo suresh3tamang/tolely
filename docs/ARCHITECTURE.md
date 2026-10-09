@@ -52,11 +52,34 @@ for a family member who will be home) → payment and notes. A booking stores `s
 `scheduledEnd`, `contactName` and `contactPhone`; suppliers in the app see the window and call the contact
 number. Older bookings without these fields still work.
 
+**Book by voice** (`voice-booking.tsx` on the website, `features/voice/` in the app): the customer taps the
+mic and says e.g. "plumber chaiyo aaja nai" (Nepali, Romanized Nepali or English) or types it. Speech becomes
+text on the device (browser speech recognition / the phone's own via `speech_to_text`, both free). The text goes
+to `POST /api/voice/parse` (`server/voice/`), which fills in the booking fields: service, option, day, time
+window, contact phone. **By default this is free**: word lists in `rules-parser.ts` (Nepali, Romanized Nepali,
+English: "dhara/pipe" -> plumber, "bholi bihana" -> tomorrow 9-12, "8 hajar litre" -> 8,000 L...). To teach it a
+new word, add it there with a test in `tests/unit/voice-rules.test.ts`. Optionally, with `ANTHROPIC_API_KEY` set,
+Claude (`claude-opus-5-5`, low effort, structured output) understands freer sentences, and the free rules take
+over if Claude is unavailable. The server then checks the draft
+against the live catalog and the 30-day rule (`cleanDraft`) and drops anything that doesn't fit. It is a short conversation (`server/voice/conversation.ts`): each turn sends what was said plus what was
+understood before, and the server asks for what is missing in order (service -> day -> time), with tap-able
+answers (days, the time windows still open). After a spoken answer the question is read aloud (browser
+`speechSynthesis` / `flutter_tts`, free, when the device has a voice for the language) and the mic opens again.
+**It books
+nothing**: the form is filled in and the customer checks it and taps Confirm, which uses the normal booking
+endpoint with all its checks. The customer's own date and time are sent along, so "aaja" means their day. Limited to 15 requests a
+minute per person.
+
 A **place search box** sits above the map (`place-search.tsx`): typing "Balkot Chowk" and pressing Search
 moves the map there and drops the pin, then the customer drags it the last ~100 m to their house. It calls
 `GET /api/places/search` (`server/places/`), which asks OpenStreetMap's Nominatim from the server (it needs a
 real User-Agent, max 1 request/second, no search-as-you-type), caches answers 10 minutes, and limits each
-signed-in person to 20 searches a minute. Switch to a paid geocoder before heavy traffic; only
+signed-in person to 20 searches a minute. A **mic button** next to the box lets the customer say the place (website and app).
+Speech-to-text writes Nepali names in Devanagari ("बालकोट चोक"), which the map often doesn't know, so when a search
+finds nothing the server retries in English letters ("balkot chowk") and then without words like चोक/tole
+(`query-variants.ts`). Phrases that mean "where I am now" ("aile basirako gharma", "mero ghar", "yahi", "here") use the
+device's current location instead of searching (`shared/here-words.ts`, mirrored in `core/utils/here_words.dart`);
+said during voice booking in the app, they pin the current location on the booking. Switch to a paid geocoder before heavy traffic; only
 `places.service.ts` changes. Set `PLACES_USER_AGENT` in production with a contact address.
 
 ---

@@ -98,12 +98,18 @@ void main() {
       optionId: '8000L',
       address: 'Balkot',
       scheduledFor: DateTime.utc(2026, 10, 8, 6),
+      scheduledEnd: DateTime.utc(2026, 10, 8, 9),
+      contactName: 'Hari',
+      contactPhone: '9811122233',
       paymentMethod: PaymentMethod.cash,
     ).toJson();
 
     expect(json['serviceKey'], 'tanker');
     expect(json['paymentMethod'], 'cash');
     expect(json['scheduledFor'], '2026-10-08T06:00:00.000Z');
+    expect(json['scheduledEnd'], '2026-10-08T09:00:00.000Z');
+    expect(json['contactName'], 'Hari');
+    expect(json['contactPhone'], '+9779811122233');
     expect(json['location'], isNull);
     expect(json.containsKey('price'), isFalse);
   });

@@ -9,7 +9,8 @@ import { Button, Card, inputClass, rupees, useToast } from "@/components/ui";
 import { isInNepal, type LatLng } from "@/shared/geo";
 import type { Service } from "@/shared/services";
 import { LocationPicker } from "./location-picker-lazy";
-import { availableSlots, isToday, lastBookableDay, nextDays, slotLabel, windowFor, type SlotId } from "./schedule";
+import { VoiceBooking, type VoiceDraft } from "./voice-booking";
+import { availableSlots, isToday, lastBookableDay, nextDays, slotLabel, windowFor, type SlotId } from "@/shared/schedule";
 
 /** The time right now (kept out of the component so rendering stays pure). */
 function currentTime(): number {
@@ -87,6 +88,8 @@ export function NewBooking({
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // Set when the form was filled in by voice: shows a short "check and confirm" card.
+  const [fromVoice, setFromVoice] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,6 +124,26 @@ export function NewBooking({
   function chooseService(s: Service) {
     setServiceKey(s.key);
     setOptionId(s.options[0].id); // the first option is preselected; one tap to change
+  }
+
+  /** Fills the form from what the customer said. Only what they actually said is changed. */
+  function applyDraft(draft: VoiceDraft, done: boolean) {
+    const s = services?.find((x) => x.key === draft.serviceKey);
+    if (s) {
+      setServiceKey(s.key);
+      setOptionId(s.options.find((o) => o.id === draft.optionId)?.id ?? s.options[0].id);
+    }
+    if (draft.date) {
+      setDay(draft.date);
+      setOtherDate(!quickDays.includes(draft.date));
+      setSlot(draft.slot && availableSlots(draft.date, currentTime()).includes(draft.slot) ? draft.slot : "");
+    } else if (draft.slot && availableSlots(day, currentTime()).includes(draft.slot)) {
+      setSlot(draft.slot);
+    }
+    if (draft.contactName) setContactName(draft.contactName);
+    if (draft.contactPhone) setContactPhone(draft.contactPhone);
+    if (draft.note) setNote((n) => (n ? `${n}\n${draft.note}` : draft.note));
+    setFromVoice(!!s && done);
   }
 
   async function book() {
@@ -160,12 +183,46 @@ export function NewBooking({
 
   return (
     <form
-      className="grid items-start gap-8 pb-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]"
+      className="grid grid-cols-[minmax(0,1fr)] items-start gap-8 pb-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]"
       onSubmit={(e) => {
         e.preventDefault();
         if (ready) book();
       }}
     >
+      <div className="space-y-3 lg:col-span-2">
+        <VoiceBooking onDraft={applyDraft} />
+        {fromVoice && service && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm ring-2 ring-sky-500">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
+                <ServiceGlyph name={service.icon} className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-medium tracking-wide text-sky-700 uppercase">{t("voiceReady")}</p>
+                <p className="truncate font-semibold text-slate-900">
+                  {pick(service, "name")}
+                  {option && service.options.length > 1 && ` · ${pick(option, "label")}`}
+                  {option && ` · ${rupees(option.price)}`}
+                </p>
+                <p className="truncate text-sm text-slate-600">
+                  {summary || t("timeRequired")}
+                  {contactName && ` · ${contactName} (${contactPhone})`}
+                </p>
+                {!location && <p className="text-sm text-amber-700">{t("voiceMissingPin")}</p>}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" variant="secondary" onClick={() => setFromVoice(false)}>
+                {t("voiceEdit")}
+              </Button>
+              <Button type="button" loading={busy} disabled={!ready} onClick={() => void book()}>
+                {t("confirmBooking")}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* The map stays in view on wide screens while the rest of the form scrolls beside it. */}
       <div className="lg:sticky lg:top-4">
         <Step n={1} title={t("locationTitle")}>

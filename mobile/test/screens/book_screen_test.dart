@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tolely/features/booking/data/booking_repository.dart';
@@ -6,6 +7,14 @@ import 'package:tolely/features/booking/presentation/book_screen.dart';
 import 'package:tolely/features/profile/domain/user_profile.dart';
 
 import '../helpers/pump_app.dart';
+
+/// Tomorrow, 12 PM – 3 PM: always available, whatever time the test runs.
+Future<void> pickTime(WidgetTester tester) async {
+  await tester.tap(find.text('Tomorrow'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('12 PM – 3 PM'));
+  await tester.pumpAndSettle();
+}
 
 void main() {
   late Fakes fakes;
@@ -42,6 +51,7 @@ void main() {
     expect(find.text('Balkot, Bhaktapur'), findsOneWidget);
     await tester.tap(find.text('6,000 Liters'));
     await tester.pumpAndSettle();
+    await pickTime(tester);
     await tester.tap(find.text('Confirm booking · Rs 2,500'));
     await tester.pumpAndSettle();
 
@@ -51,6 +61,10 @@ void main() {
     expect(sent.address, 'Balkot, Bhaktapur');
     expect(sent.landmark, 'Near the temple');
     expect(sent.paymentMethod, PaymentMethod.cash);
+    expect(sent.scheduledFor.hour, 12);
+    expect(sent.scheduledEnd.hour, 15);
+    expect(sent.contactName, 'Suresh Tamang');
+    expect(sent.toJson()['contactPhone'], startsWith('+977'));
     expect(sent.location, isNull);
     expect(sent.toJson().containsKey('price'), isFalse); // the server decides the price
   });
@@ -66,7 +80,7 @@ void main() {
   });
 
   testWidgets('an empty address is not sent', (tester) async {
-    const noAddress = UserProfile(uid: 'u1', role: UserRole.customer, name: 'Suresh');
+    const noAddress = UserProfile(uid: 'u1', role: UserRole.customer, name: 'Suresh', phone: '+9779800000001');
     await pumpScreen(
       tester,
       const BookScreen(service: tanker, profile: noAddress),
@@ -74,6 +88,7 @@ void main() {
       language: 'en',
     );
 
+    await pickTime(tester);
     await tester.tap(find.text('Confirm booking · Rs 3,200'));
     await tester.pumpAndSettle();
 
@@ -90,10 +105,19 @@ void main() {
       language: 'en',
     );
 
+    await pickTime(tester);
     await tester.tap(find.text('Confirm booking · Rs 3,200'));
     await tester.pumpAndSettle();
 
     expect(find.text('Something went wrong. Please try again.'), findsOneWidget);
     expect(find.byType(BookScreen), findsOneWidget);
+  });
+
+  testWidgets('cannot be confirmed until a time is chosen', (tester) async {
+    await pumpScreen(tester, const BookScreen(service: tanker, profile: customerProfile), fakes, language: 'en');
+    final confirm = find.widgetWithText(FilledButton, 'Confirm booking · Rs 3,200');
+    expect(tester.widget<FilledButton>(confirm).onPressed, isNull);
+    await pickTime(tester);
+    expect(tester.widget<FilledButton>(confirm).onPressed, isNotNull);
   });
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { availableSlots, dayKey, lastBookableDay, nextDays, slotLabel, windowFor } from "@/app/book/schedule";
+import { availableSlots, dayKey, lastBookableDay, nextDays, slotLabel, windowFor } from "@/shared/schedule";
 
 const at = (y: number, m: number, d: number, h: number, min = 0) => new Date(y, m - 1, d, h, min).getTime();
 

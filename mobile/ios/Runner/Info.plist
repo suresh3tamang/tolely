@@ -42,6 +42,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Tolely listens when you tap the microphone, so you can book a service by speaking.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Tolely turns what you say into text so you can book a service by speaking.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Tolely uses your location to pin your address for suppliers, and to show customers where their supplier is while on the way.</string>
 	<key>UIApplicationSceneManifest</key>

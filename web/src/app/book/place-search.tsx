@@ -1,9 +1,11 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Mic, MicOff, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/client/firebase";
 import { useI18n } from "@/client/i18n/provider";
+import { makeRecognition, speechLang, type Recognition } from "@/client/speech";
+import { meansCurrentLocation } from "@/shared/here-words";
 import { Button } from "@/components/ui";
 
 export type FoundPlace = { id: string; label: string; detail: string; lat: number; lng: number };
@@ -12,13 +14,22 @@ export type FoundPlace = { id: string; label: string; detail: string; lat: numbe
  * Search box for the map: type "Balkot Chowk", press Search, and the first match is picked
  * (the map moves there). Other matches are listed in case the first is not the right one.
  */
-export function PlaceSearch({ onPick }: { onPick: (place: FoundPlace) => void }) {
+export function PlaceSearch({ onPick, onHere }: { onPick: (place: FoundPlace) => void; onHere?: () => void }) {
   const { t, lang } = useI18n();
   const [query, setQuery] = useState("");
   const [state, setState] = useState<"idle" | "searching" | "none" | "failed">("idle");
   const [others, setOthers] = useState<FoundPlace[]>([]);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef(0); // only the newest search may show its answer
+  const recognition = useRef<Recognition | null>(null);
+  const [listening, setListening] = useState(false);
+  const [canListen, setCanListen] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- speech support is only known in the browser
+    setCanListen(!!makeRecognition());
+    return () => recognition.current?.stop();
+  }, []);
 
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current);
@@ -27,9 +38,18 @@ export function PlaceSearch({ onPick }: { onPick: (place: FoundPlace) => void })
   const fetchPlaces = (q: string) => apiFetch<{ results: FoundPlace[] }>(`/api/places/search?q=${encodeURIComponent(q)}&lang=${lang}`);
 
   // The Search button / Enter: go to the best match straight away.
-  async function search() {
-    const q = query.trim();
+  async function search(said?: string) {
+    const q = (said ?? query).trim();
     if (q.length < 2) return;
+    // "mero ghar", "yahi", "aile basirako gharma": use where they are now.
+    if (onHere && meansCurrentLocation(q)) {
+      if (timer.current) clearTimeout(timer.current);
+      latest.current++;
+      setOthers([]);
+      setState("idle");
+      setQuery("");
+      return onHere();
+    }
     if (timer.current) clearTimeout(timer.current);
     const mine = ++latest.current;
     setState("searching");
@@ -52,7 +72,7 @@ export function PlaceSearch({ onPick }: { onPick: (place: FoundPlace) => void })
     if (timer.current) clearTimeout(timer.current);
     const q = value.trim();
     const mine = ++latest.current;
-    if (q.length < 3) {
+    if (q.length < 3 || meansCurrentLocation(q)) {
       setOthers([]);
       setState("idle");
       return;
@@ -69,6 +89,38 @@ export function PlaceSearch({ onPick }: { onPick: (place: FoundPlace) => void })
     }, 600);
   }
 
+  /** Say the place ("Balkot chowk"): the words fill the box and the map moves there. */
+  function listen() {
+    if (listening) return recognition.current?.stop();
+    const r = makeRecognition();
+    if (!r) return;
+    recognition.current = r;
+    r.lang = speechLang(lang);
+    r.interimResults = true;
+    r.continuous = false;
+    let finalText = "";
+    r.onresult = (e) => {
+      let words = "";
+      for (let i = 0; i < e.results.length; i++) {
+        words += e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText = e.results[i][0].transcript;
+      }
+      if (timer.current) clearTimeout(timer.current);
+      setQuery(words);
+    };
+    r.onerror = () => setListening(false);
+    r.onend = () => {
+      setListening(false);
+      if (finalText.trim().length >= 2) {
+        setQuery(finalText);
+        void search(finalText);
+      }
+    };
+    setListening(true);
+    setOthers([]);
+    r.start();
+  }
+
   function choose(place: FoundPlace) {
     latest.current++;
     onPick(place);
@@ -81,7 +133,7 @@ export function PlaceSearch({ onPick }: { onPick: (place: FoundPlace) => void })
         <input
           type="search"
           value={query}
-          placeholder={t("searchPlaceholder")}
+          placeholder={listening ? t("voiceListening") : t("searchPlaceholder")}
           aria-label={t("searchPlaceholder")}
           maxLength={100}
           onChange={(e) => typed(e.target.value)}
@@ -93,6 +145,20 @@ export function PlaceSearch({ onPick }: { onPick: (place: FoundPlace) => void })
           }}
           className="h-11 min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-4 text-sm shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
         />
+        {canListen && (
+          <button
+            type="button"
+            onClick={listen}
+            aria-label={listening ? t("voiceStop") : t("searchByVoice")}
+            title={t("searchByVoice")}
+            className={`relative flex size-11 shrink-0 items-center justify-center rounded-lg border transition ${
+              listening ? "border-red-500 bg-red-500 text-white" : "border-slate-200 bg-white text-sky-700 shadow-sm hover:bg-sky-50"
+            }`}
+          >
+            {listening && <span className="absolute inset-0 animate-ping rounded-lg bg-red-400/50" />}
+            {listening ? <MicOff className="relative size-5" /> : <Mic className="size-5" />}
+          </button>
+        )}
         <Button type="button" className="h-11 px-5" icon={Search} loading={state === "searching"} disabled={query.trim().length < 2} onClick={() => void search()}>
           {t("searchButton")}
         </Button>

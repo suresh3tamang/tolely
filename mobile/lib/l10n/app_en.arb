@@ -142,5 +142,30 @@
         "type": "int"
       }
     }
-  }
+  },
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+  "otherDate": "Other date",
+  "asap": "As soon as possible",
+  "noSlotsToday": "No time left today. Please pick another day.",
+  "chooseTime": "Choose a time",
+  "contactTitle": "Who should the supplier contact?",
+  "contactName": "Contact person",
+  "contactPhone": "Contact phone",
+  "contactHint": "The supplier will call this number. Use another person's if you won't be home.",
+  "contactInvalid": "Enter a phone number with 8 to 10 digits.",
+  "timeExpired": "That time has passed. Please choose again.",
+  "voiceTitle": "Book by voice",
+  "voiceHint": "Say what you need, e.g. “plumber chaiyo aaja nai”",
+  "voicePlaceholder": "Or type it here",
+  "voiceListening": "Listening… speak now",
+  "voiceThinking": "Understanding…",
+  "voiceNotHeard": "I didn't catch that. Tap the mic and try again, or type it.",
+  "micBlocked": "Voice is not available. Allow the microphone in Settings, or type instead.",
+  "voiceReady": "Check the details and confirm",
+  "voiceSend": "Understand",
+  "voiceTapToSpeak": "Tap to speak",
+  "searchPlace": "Search a place, e.g. Balkot Chowk",
+  "searchByVoice": "Say the place",
+  "noPlaces": "No place found. Try another spelling, or move the map."
 }
