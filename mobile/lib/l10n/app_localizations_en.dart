@@ -157,7 +157,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile => 'Profile';
 
   @override
-  String get me => 'Me';
+  String get me => 'Profile';
 
   @override
   String get languageLabel => 'Language';
@@ -481,4 +481,97 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get arrivedChip => 'Arrived';
+
+  @override
+  String get authSmsNotAvailable =>
+      'SMS codes can\'t be sent yet (the service is being set up). Please try again later.';
+
+  @override
+  String get authWrongCode => 'That code is wrong. Check the SMS and try again.';
+
+  @override
+  String get authCodeExpired => 'The code has expired. Please ask for a new one.';
+
+  @override
+  String get authTooManyTries => 'Too many tries. Please wait a few minutes and try again.';
+
+  @override
+  String get navJobs => 'Jobs';
+
+  @override
+  String get navProfile => 'Profile';
+
+  @override
+  String get onlineTitle => 'You\'re online';
+
+  @override
+  String get onlineSubtitle => 'New jobs for your services will come to you.';
+
+  @override
+  String get offlineTitle => 'You\'re offline';
+
+  @override
+  String get offlineSubtitle => 'Slide below to start receiving jobs.';
+
+  @override
+  String jobsAvailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count jobs available',
+      one: '1 job available',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noJobsTitle => 'No jobs right now';
+
+  @override
+  String get noJobsHint => 'New jobs for your services show up here, and you\'ll get a notification.';
+
+  @override
+  String get noMyJobsTitle => 'No jobs yet';
+
+  @override
+  String get noMyJobsHint => 'Jobs you accept show up here.';
+
+  @override
+  String get inProgress => 'In progress';
+
+  @override
+  String get finishedRecently => 'Finished (last 7 days)';
+
+  @override
+  String get reviewTitle => 'Your account is being checked';
+
+  @override
+  String get reviewStep1 => 'Registered';
+
+  @override
+  String get reviewStep2 => 'Our team calls you to check your details';
+
+  @override
+  String get reviewStep3 => 'You start receiving jobs';
+
+  @override
+  String get reviewHint => 'This usually takes less than a day. Pull down to refresh.';
+
+  @override
+  String get goOnlineToSee => 'Go online to see and accept new jobs.';
+
+  @override
+  String get slideOnline => 'Slide to go online';
+
+  @override
+  String get slideOffline => 'Slide to go offline';
+
+  @override
+  String get todayJobs => 'Jobs today';
+
+  @override
+  String get todayEarned => 'Earned today';
+
+  @override
+  String get navigate => 'Navigate in Google Maps';
 }

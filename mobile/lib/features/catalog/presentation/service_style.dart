@@ -50,3 +50,14 @@ class ServiceAvatar extends StatelessWidget {
     );
   }
 }
+
+/// The icon name for a booked service (bookings keep the service key, not the icon).
+String iconForServiceKey(String key) => switch (key) {
+  'tanker' => 'water_drop',
+  'tank_cleaning' => 'cleaning_services',
+  'plumber' => 'plumbing',
+  'electrician' => 'electrical_services',
+  'shifting' => 'local_shipping',
+  'home_cleaning' => 'cleaning_services',
+  _ => 'handyman',
+};

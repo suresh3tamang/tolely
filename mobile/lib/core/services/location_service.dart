@@ -23,9 +23,18 @@ class LocationService {
     }
   }
 
-  /// Opens turn-by-turn directions in Google Maps (or the browser).
-  Future<void> openDirections(LatLng to) => launchUrl(
-    Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${to.latitude},${to.longitude}'),
-    mode: LaunchMode.externalApplication,
-  );
+  /// Starts driving navigation to [to] in Google Maps. On Android this opens turn-by-turn straight away;
+  /// otherwise (or without the Google Maps app) the directions page opens, ready to start.
+  Future<void> openDirections(LatLng to) async {
+    final at = '${to.latitude},${to.longitude}';
+    try {
+      if (await launchUrl(Uri.parse('google.navigation:q=$at&mode=d'), mode: LaunchMode.externalApplication)) return;
+    } catch (_) {
+      // No Google Maps app (or not Android): use the web link below.
+    }
+    await launchUrl(
+      Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$at&travelmode=driving&dir_action=navigate'),
+      mode: LaunchMode.externalApplication,
+    );
+  }
 }

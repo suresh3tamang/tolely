@@ -157,7 +157,7 @@ class AppLocalizationsNe extends AppLocalizations {
   String get profile => 'प्रोफाइल';
 
   @override
-  String get me => 'म';
+  String get me => 'प्रोफाइल';
 
   @override
   String get languageLabel => 'भाषा';
@@ -482,4 +482,90 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get arrivedChip => 'आइपुग्नुभयो';
+
+  @override
+  String get authSmsNotAvailable => 'अहिले SMS कोड पठाउन सकिँदैन (सेवा मिलाउँदैछौं)। कृपया पछि फेरि प्रयास गर्नुहोस्।';
+
+  @override
+  String get authWrongCode => 'कोड मिलेन। SMS हेरेर फेरि प्रयास गर्नुहोस्।';
+
+  @override
+  String get authCodeExpired => 'कोडको समय सकियो। नयाँ कोड माग्नुहोस्।';
+
+  @override
+  String get authTooManyTries => 'धेरै पटक प्रयास भयो। केही मिनेट पर्खेर फेरि प्रयास गर्नुहोस्।';
+
+  @override
+  String get navJobs => 'काम';
+
+  @override
+  String get navProfile => 'प्रोफाइल';
+
+  @override
+  String get onlineTitle => 'तपाईं अनलाइन हुनुहुन्छ';
+
+  @override
+  String get onlineSubtitle => 'तपाईंको सेवाका नयाँ काम यहाँ आउनेछन्।';
+
+  @override
+  String get offlineTitle => 'तपाईं अफलाइन हुनुहुन्छ';
+
+  @override
+  String get offlineSubtitle => 'काम पाउन तलको बटन स्लाइड गर्नुहोस्।';
+
+  @override
+  String jobsAvailable(int count) {
+    return '$count वटा काम उपलब्ध';
+  }
+
+  @override
+  String get noJobsTitle => 'अहिले कुनै काम छैन';
+
+  @override
+  String get noJobsHint => 'तपाईंको सेवाका नयाँ काम यहाँ देखिन्छन्, र सूचना पनि आउँछ।';
+
+  @override
+  String get noMyJobsTitle => 'अहिलेसम्म कुनै काम छैन';
+
+  @override
+  String get noMyJobsHint => 'तपाईंले स्वीकार गरेका काम यहाँ देखिन्छन्।';
+
+  @override
+  String get inProgress => 'चलिरहेको';
+
+  @override
+  String get finishedRecently => 'सकिएको (पछिल्लो ७ दिन)';
+
+  @override
+  String get reviewTitle => 'तपाईंको खाता जाँच हुँदैछ';
+
+  @override
+  String get reviewStep1 => 'दर्ता भयो';
+
+  @override
+  String get reviewStep2 => 'हाम्रो टोलीले फोन गरेर विवरण जाँच्छ';
+
+  @override
+  String get reviewStep3 => 'तपाईंले काम पाउन थाल्नुहुन्छ';
+
+  @override
+  String get reviewHint => 'प्रायः एक दिनभित्र हुन्छ। रिफ्रेस गर्न तल तान्नुहोस्।';
+
+  @override
+  String get goOnlineToSee => 'नयाँ काम हेर्न र स्वीकार गर्न अनलाइन हुनुहोस्।';
+
+  @override
+  String get slideOnline => 'अनलाइन हुन स्लाइड गर्नुहोस्';
+
+  @override
+  String get slideOffline => 'अफलाइन हुन स्लाइड गर्नुहोस्';
+
+  @override
+  String get todayJobs => 'आजका काम';
+
+  @override
+  String get todayEarned => 'आजको कमाइ';
+
+  @override
+  String get navigate => 'गुगल म्यापमा बाटो हेर्नुहोस्';
 }

@@ -389,7 +389,7 @@ abstract class AppLocalizations {
   /// No description provided for @me.
   ///
   /// In en, this message translates to:
-  /// **'Me'**
+  /// **'Profile'**
   String get me;
 
   /// No description provided for @languageLabel.
@@ -1003,6 +1003,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Arrived'**
   String get arrivedChip;
+
+  /// No description provided for @authSmsNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS codes can\'t be sent yet (the service is being set up). Please try again later.'**
+  String get authSmsNotAvailable;
+
+  /// No description provided for @authWrongCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That code is wrong. Check the SMS and try again.'**
+  String get authWrongCode;
+
+  /// No description provided for @authCodeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'The code has expired. Please ask for a new one.'**
+  String get authCodeExpired;
+
+  /// No description provided for @authTooManyTries.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries. Please wait a few minutes and try again.'**
+  String get authTooManyTries;
+
+  /// No description provided for @navJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Jobs'**
+  String get navJobs;
+
+  /// No description provided for @navProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get navProfile;
+
+  /// No description provided for @onlineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re online'**
+  String get onlineTitle;
+
+  /// No description provided for @onlineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New jobs for your services will come to you.'**
+  String get onlineSubtitle;
+
+  /// No description provided for @offlineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline'**
+  String get offlineTitle;
+
+  /// No description provided for @offlineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide below to start receiving jobs.'**
+  String get offlineSubtitle;
+
+  /// No description provided for @jobsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 job available} other{{count} jobs available}}'**
+  String jobsAvailable(int count);
+
+  /// No description provided for @noJobsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No jobs right now'**
+  String get noJobsTitle;
+
+  /// No description provided for @noJobsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New jobs for your services show up here, and you\'ll get a notification.'**
+  String get noJobsHint;
+
+  /// No description provided for @noMyJobsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No jobs yet'**
+  String get noMyJobsTitle;
+
+  /// No description provided for @noMyJobsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Jobs you accept show up here.'**
+  String get noMyJobsHint;
+
+  /// No description provided for @inProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get inProgress;
+
+  /// No description provided for @finishedRecently.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished (last 7 days)'**
+  String get finishedRecently;
+
+  /// No description provided for @reviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is being checked'**
+  String get reviewTitle;
+
+  /// No description provided for @reviewStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered'**
+  String get reviewStep1;
+
+  /// No description provided for @reviewStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Our team calls you to check your details'**
+  String get reviewStep2;
+
+  /// No description provided for @reviewStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'You start receiving jobs'**
+  String get reviewStep3;
+
+  /// No description provided for @reviewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This usually takes less than a day. Pull down to refresh.'**
+  String get reviewHint;
+
+  /// No description provided for @goOnlineToSee.
+  ///
+  /// In en, this message translates to:
+  /// **'Go online to see and accept new jobs.'**
+  String get goOnlineToSee;
+
+  /// No description provided for @slideOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide to go online'**
+  String get slideOnline;
+
+  /// No description provided for @slideOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide to go offline'**
+  String get slideOffline;
+
+  /// No description provided for @todayJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Jobs today'**
+  String get todayJobs;
+
+  /// No description provided for @todayEarned.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned today'**
+  String get todayEarned;
+
+  /// No description provided for @navigate.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigate in Google Maps'**
+  String get navigate;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
