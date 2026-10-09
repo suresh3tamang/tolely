@@ -5,9 +5,15 @@ plumbers, electricians, and more services over time. Starting in Kathmandu.
 
 ```
 mobile/   Flutter app (Android + iOS), for customers and suppliers
-web/      Next.js: Node.js API + admin dashboard (/admin) + landing page
+web/      Next.js: backend API + admin console (/admin) + public website
+docs/     Architecture guide: read this before adding features
+brand/    Logo and app icon sources
 firestore.rules, firestore.indexes.json, firebase.json
 ```
+
+**Developers:** start with [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md); to publish, see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). It explains the folder
+layout, the rules that keep the code tidy, and step-by-step recipes (add a language, a service,
+an endpoint, a feature).
 
 ## How it fits together
 
@@ -18,7 +24,7 @@ Flutter app ──(Firebase ID token)──▶ Next.js API ──(Admin SDK)─�
 
 - **Login**: phone number + OTP (Firebase Auth). Admins log in to the web dashboard with email/password.
 - **Writes** (bookings, accept, status, ratings) all go through the API, which checks roles,
-  decides prices from `web/src/lib/services.ts`, and validates status changes.
+  decides prices from the service catalog, and validates status changes.
 - **Reads**: the app listens to Firestore directly for live updates. `firestore.rules` blocks all client writes.
 
 Booking flow: `pending` → supplier accepts → `accepted` → `on_the_way` → `completed` → customer rates.
@@ -38,15 +44,22 @@ The customer can cancel while `pending` or `accepted`; the supplier can release 
   directions; customers see the supplier's live location while they're on the way
   (shared every 20 s while the supplier app is open)
 - Suppliers can go online / offline (offline = no new-job alerts); customers can "Book again"
+- Customers see their supplier's rating, jobs done and verified mark; tapping a notification opens that booking
+- Suppliers see what they earn on each job after Tolely's fee, and what they owe Tolely
 
 **Website**
+- **Customers can book on the website**: sign in with Google, verify a phone number once, then book
+  and follow bookings live (Nepali / English). The booking starts with a **map**: it finds the
+  customer's current location, zooms in, and lets them drag the pin or tap another place.
+  Service providers use **only the app**.
 - Landing page with live service prices, how it works, FAQ
 - `/partners` page for tanker owners, plumbers and electricians
 - `/privacy` and `/terms` (drafts, needed for Play Store / App Store; review before launch)
 - `/admin`: bookings (search, filter, cancel), supplier verification, **service and price
-  editor** (add new services without an app update), problem reports
+  editor** (add new services without an app update), problem reports, and **Money**: the
+  platform fee, what suppliers owe, payments received, and a spreadsheet export
 
-Business details (phone, email, Facebook, store links) live in `web/src/lib/site.ts`.
+Business details (phone, email, Facebook, store links) live in `web/src/config/site.ts`.
 
 ## Setup
 
@@ -103,12 +116,20 @@ in Firebase → Authentication → Sign-in method → Phone.
 |---|---|---|
 | 9800000001 | 111111 | customer |
 | 9800000002 | 222222 | supplier |
+| 9800000003 | 333333 | website customer (Google sign-in + phone step) |
 
 ## Adding a new service
 In `/admin` → **Services** → **New service**: set a name, icon and prices, and switch it on.
 Customers see it in the app within a few minutes. The default catalog is in
-`web/src/lib/services.ts`; to add a new *icon*, add it to `SERVICE_ICONS` there and to
-`_serviceIcons` in `mobile/lib/screens/common.dart`.
+`web/src/shared/services.ts`; for a new *icon* see the recipe in `docs/ARCHITECTURE.md`.
+
+## Tests
+
+```bash
+cd mobile && flutter test        # models, language switching, screens with fake data
+cd web && npm test               # rules + the whole booking lifecycle on a local database emulator
+```
+The emulator tests need Java 21+ and `firebase-tools`; they never touch your real data.
 
 ## Next steps
 - Online payment with eSewa / Khalti (needs a merchant account)

@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AppButtons, SiteFooter, SiteHeader } from "@/components/site-chrome";
-import { getCatalog } from "@/lib/catalog";
-import { SITE } from "@/lib/site";
+import { getCatalog } from "@/server/catalog/catalog.service";
+import { SITE } from "@/config/site";
 
 const STEPS = [
   { en: "Choose a service", ne: "सेवा छान्नुहोस्", text: "Tanker, plumber, electrician and more. See the price before you book." },
@@ -20,6 +20,10 @@ const REASONS = [
 ];
 
 const FAQ = [
+  {
+    q: "Do I need the app to book?",
+    a: "No. Customers can book on this website by signing in with Google, or use the Tolely app with their phone number. Service providers use the app.",
+  },
   {
     q: "Which areas do you serve?",
     a: `We are starting in ${SITE.city} valley and adding areas as more suppliers join.`,
@@ -61,11 +65,15 @@ export default async function Home() {
               and live status, all in one app.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link href="/book" className="rounded-full bg-sky-700 px-7 py-3 text-lg font-semibold text-white shadow-sm hover:bg-sky-800">
+                Book now · बुक गर्नुहोस्
+              </Link>
               <AppButtons />
               <Link href="#services" className="px-3 py-3 font-medium text-sky-800 hover:underline">
                 See prices →
               </Link>
             </div>
+            <p className="mt-3 text-sm text-slate-500">Sign in with Google. No app needed to book.</p>
           </div>
           <div className="mx-auto">
             <Image src="/icon.svg" alt="Tolely" width={280} height={280} priority className="w-36 drop-shadow-xl md:w-[280px]" />

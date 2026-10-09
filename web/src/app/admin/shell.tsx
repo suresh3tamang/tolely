@@ -1,16 +1,17 @@
 "use client";
 
-import { CalendarCheck, LayoutDashboard, LogOut, MessageSquareWarning, RefreshCw, Tags, Truck, type LucideIcon } from "lucide-react";
+import { CalendarCheck, LayoutDashboard, LogOut, MessageSquareWarning, RefreshCw, Tags, Truck, Wallet, type LucideIcon } from "lucide-react";
 import Image from "next/image";
 import { Avatar, Button } from "./ui";
 
-export const SECTIONS = ["overview", "bookings", "suppliers", "services", "complaints"] as const;
+export const SECTIONS = ["overview", "bookings", "suppliers", "money", "services", "complaints"] as const;
 export type Section = (typeof SECTIONS)[number];
 
 const NAV: Record<Section, { label: string; icon: LucideIcon; description: string }> = {
   overview: { label: "Overview", icon: LayoutDashboard, description: "How Tolely is doing today" },
   bookings: { label: "Bookings", icon: CalendarCheck, description: "Every job booked by customers" },
   suppliers: { label: "Suppliers", icon: Truck, description: "Verify new suppliers and manage existing ones" },
+  money: { label: "Money", icon: Wallet, description: "Platform fee, what suppliers owe, and payments received" },
   services: { label: "Services & prices", icon: Tags, description: "What customers can book, and what it costs" },
   complaints: { label: "Problem reports", icon: MessageSquareWarning, description: "Issues reported by customers and suppliers" },
 };

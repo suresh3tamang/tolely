@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { TextPage } from "@/components/site-chrome";
-import { SITE } from "@/lib/site";
+import { SITE } from "@/config/site";
 
 export const metadata: Metadata = { title: "Terms of service · Tolely" };
 

@@ -4,7 +4,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { ShieldCheck, Star, Truck } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import { clientAuth } from "@/lib/firebase-client";
+import { clientAuth } from "@/client/firebase";
 import { Button, inputClass } from "./ui";
 
 export function Login() {

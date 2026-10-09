@@ -1,17 +1,14 @@
-# tolely
+# Tolely mobile app
 
-A new Flutter project.
+Flutter app (Android + iOS) for customers and suppliers.
+Architecture and conventions: [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md).
 
-## Getting Started
+```bash
+flutter pub get                 # also generates the translations
+flutter run --dart-define=API_BASE_URL=http://<your-computer-ip>:3000
+flutter test                    # unit + screen tests
+flutter analyze
+flutter build apk --release --dart-define=API_BASE_URL=http://<your-computer-ip>:3000
+```
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Texts are in `lib/l10n/*.arb`. Firebase is configured by `flutterfire configure`.

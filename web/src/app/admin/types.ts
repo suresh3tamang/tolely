@@ -1,4 +1,4 @@
-import type { Service } from "@/lib/services";
+import type { Service } from "@/shared/services";
 
 export type Booking = {
   id: string;
@@ -15,6 +15,8 @@ export type Booking = {
   note: string;
   paymentMethod: string;
   rating: number | null;
+  platformFee?: number;
+  supplierEarning?: number;
   location?: { lat: number; lng: number } | null;
   scheduledFor: string;
   createdAt: string;
@@ -32,6 +34,11 @@ export type Supplier = {
   ratingSum: number;
   ratingCount: number;
   completedJobs: number;
+  earningsTotal?: number;
+  feesTotal?: number;
+  feesSettled?: number;
+  /** Platform fees the supplier still owes Tolely. */
+  feeBalance?: number;
 };
 
 export type Complaint = {
@@ -46,9 +53,20 @@ export type Complaint = {
   createdAt: string;
 };
 
+export type Settlement = {
+  id: string;
+  supplierId: string;
+  supplierName: string;
+  amount: number;
+  note: string;
+  createdAt: string;
+};
+
 export type Overview = {
   bookings: Booking[];
   suppliers: Supplier[];
   complaints: Complaint[];
+  settlements: Settlement[];
   services: Service[];
+  settings: { platformFeePercent: number };
 };

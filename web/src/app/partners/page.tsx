@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { AppButtons, SiteFooter, SiteHeader } from "@/components/site-chrome";
-import { SITE } from "@/lib/site";
+import { SITE } from "@/config/site";
 
 export const metadata: Metadata = {
   title: "Become a partner · Tolely",
@@ -40,6 +40,9 @@ export default function PartnersPage() {
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-slate-600">
             For water tanker owners, plumbers, electricians and other skilled workers in {SITE.city}.
+          </p>
+          <p className="mt-2 max-w-2xl text-slate-600">
+            Providers work in the <strong>Tolely app</strong> (you sign in with your phone number). The website is for customers.
           </p>
           <div className="mt-8">
             <AppButtons />

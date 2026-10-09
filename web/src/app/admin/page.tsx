@@ -4,8 +4,9 @@ import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { LoaderCircle } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
-import { apiFetch, clientAuth } from "@/lib/firebase-client";
+import { apiFetch, clientAuth } from "@/client/firebase";
 import { Login } from "./login";
+import { MoneyPage } from "./money";
 import { OverviewPage } from "./overview";
 import { ServicesEditor } from "./services-editor";
 import { AdminShell, SECTIONS, type Section } from "./shell";
@@ -103,6 +104,7 @@ function Dashboard({ user }: { user: User }) {
     suppliers: data.suppliers.filter((s) => !s.verified).length,
     complaints: data.complaints.filter((c) => c.status === "open").length,
     bookings: data.bookings.filter((b) => b.status === "pending").length,
+    money: data.suppliers.filter((s) => (s.feeBalance ?? 0) > 0).length,
   };
 
   return (
@@ -124,6 +126,8 @@ function Dashboard({ user }: { user: User }) {
         <BookingsTable bookings={data.bookings} onCancel={(booking) => setDialog({ kind: "cancel", booking })} />
       ) : section === "suppliers" ? (
         <SuppliersTable suppliers={data.suppliers} onVerify={(supplier, verified) => setDialog({ kind: "verify", supplier, verified })} />
+      ) : section === "money" ? (
+        <MoneyPage data={data} onChanged={load} />
       ) : section === "services" ? (
         <ServicesEditor services={data.services} onSaved={load} />
       ) : (

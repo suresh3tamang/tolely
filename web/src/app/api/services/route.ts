@@ -1,4 +1,4 @@
-import { getCatalog } from "@/lib/catalog";
+import { getCatalog } from "@/server/catalog/catalog.service";
 
 export async function GET() {
   const services = await getCatalog();

@@ -1,0 +1,7 @@
+# Flutter localization config. Translations live in lib/l10n/app_<lang>.arb;
+# `flutter pub get` / `flutter run` regenerate the Dart code from them.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false

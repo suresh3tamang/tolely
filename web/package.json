@@ -6,11 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "vitest run tests/unit tests/ui",
+    "test:integration": "firebase emulators:exec --config ../firebase.json --only firestore --project demo-tolely \"vitest run tests/integration\"",
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "firebase": "^13.0.0",
     "firebase-admin": "^14.5.0",
+    "leaflet": "^1.9.4",
     "lucide-react": "^1.53.0",
     "next": "16.4.0",
     "react": "19.3.0",
@@ -20,12 +25,17 @@
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^24.19.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
+    "jsdom": "^30.1.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.3"
   }
 }

@@ -1,29 +1,16 @@
 "use client";
 
-import { Droplets, Hammer, PaintRoller, Pencil, Plus, Snowflake, Sparkles, Tags, Trash, Truck, Wrench, Zap, type LucideIcon } from "lucide-react";
+import { Pencil, Plus, Tags, Trash } from "lucide-react";
 import { useState } from "react";
-import { apiFetch } from "@/lib/firebase-client";
-import { SERVICE_ICONS, type Service, type ServiceOption } from "@/lib/services";
+import { apiFetch } from "@/client/firebase";
+import { ServiceGlyph } from "@/components/service-icons";
+import { SERVICE_ICONS, type Service, type ServiceOption } from "@/shared/services";
 import { Badge, Button, Card, EmptyState, inputClass, rupees, useToast } from "./ui";
 
-// Web preview of the icons the mobile app shows for each service.
-const ICONS: Record<string, LucideIcon> = {
-  water_drop: Droplets,
-  cleaning_services: Sparkles,
-  plumbing: Wrench,
-  electrical_services: Zap,
-  local_shipping: Truck,
-  format_paint: PaintRoller,
-  ac_unit: Snowflake,
-  carpenter: Hammer,
-  handyman: Hammer,
-};
-
 function ServiceIcon({ name, active = true }: { name: string; active?: boolean }) {
-  const Icon = ICONS[name] ?? Hammer;
   return (
     <span className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${active ? "bg-sky-50 text-sky-700" : "bg-slate-100 text-slate-400"}`}>
-      <Icon className="size-5" />
+      <ServiceGlyph name={name} className="size-5" />
     </span>
   );
 }
@@ -157,11 +144,10 @@ function ServiceForm({ initial, isNew, onCancel, onSaved }: { initial: Service; 
           <Field label="Icon">
             <div className="flex flex-wrap gap-2">
               {SERVICE_ICONS.map((name) => {
-                const Icon = ICONS[name] ?? Hammer;
                 return (
                   <button key={name} type="button" title={name} onClick={() => setS({ ...s, icon: name })}
                     className={`flex size-10 items-center justify-center rounded-lg border transition ${s.icon === name ? "border-sky-500 bg-sky-50 text-sky-700 ring-4 ring-sky-500/10" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}>
-                    <Icon className="size-5" />
+                    <ServiceGlyph name={name} className="size-5" />
                   </button>
                 );
               })}

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { SITE } from "@/lib/site";
+import { SITE } from "@/config/site";
 
 export function SiteHeader() {
   return (
@@ -15,8 +15,11 @@ export function SiteHeader() {
           <Link href="/#services" className="hidden px-2 py-1 text-slate-600 hover:text-sky-800 md:inline">Services</Link>
           <Link href="/#how" className="hidden px-2 py-1 text-slate-600 hover:text-sky-800 md:inline">How it works</Link>
           <Link href="/#faq" className="hidden px-2 py-1 text-slate-600 hover:text-sky-800 md:inline">FAQ</Link>
-          <Link href="/partners" className="rounded-full bg-amber-500 px-4 py-2 font-medium text-white hover:bg-amber-600">
+          <Link href="/partners" className="hidden rounded-full px-3 py-2 font-medium text-slate-600 hover:text-sky-800 sm:inline">
             Become a partner
+          </Link>
+          <Link href="/book" className="rounded-full bg-sky-700 px-4 py-2 font-medium text-white hover:bg-sky-800">
+            Book now
           </Link>
         </nav>
       </div>

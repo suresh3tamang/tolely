@@ -1,0 +1,57 @@
+# Runs on every push and pull request: if this is green, the app and website build,
+# pass the linters, and pass all tests (including the booking lifecycle on a local
+# Firestore emulator).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile:
+    name: Mobile app
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  web:
+    name: Website and backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      # The Firestore emulator (used by the integration tests) needs Java.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm install --global firebase-tools
+      - run: npm run lint
+      # Next.js generates some types on first use, so this creates them before checking.
+      - run: npm run typecheck
+      - run: npm run test:unit
+      - run: npm run test:integration
+      - run: npm run build

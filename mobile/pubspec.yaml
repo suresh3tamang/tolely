@@ -45,6 +45,10 @@ dependencies:
   latlong2: ^0.10.1
   geolocator: ^14.1.1
   google_fonts: ^6.3.0
+  flutter_localizations:
+    sdk: flutter
+  shared_preferences: ^2.5.6
+  provider: ^6.1.5+1
 
 dev_dependencies:
   flutter_test:
@@ -57,12 +61,14 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  mocktail: ^1.0.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
 flutter:
+  generate: true # builds AppLocalizations from lib/l10n/*.arb
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

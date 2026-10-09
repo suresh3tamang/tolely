@@ -5,3 +5,6 @@
 # Firebase service account keys: never commit
 service-account*.json
 *firebase-adminsdk*.json
+
+# Test build served from the local website
+web/public/tolely.apk

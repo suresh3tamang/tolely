@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarCheck, ChevronRight, Hourglass, MessageSquareWarning, Star, UserCheck, Wallet, type LucideIcon } from "lucide-react";
+import { CalendarCheck, ChevronRight, HandCoins, Hourglass, MessageSquareWarning, Star, UserCheck, Wallet, type LucideIcon } from "lucide-react";
 import type { Section } from "./shell";
 import type { Overview } from "./types";
 import { Avatar, Card, EmptyState, StatusBadge, STATUS_LABELS, formatDate, plural, rupees } from "./ui";
@@ -30,6 +30,7 @@ export function OverviewPage({ data, now, go }: { data: Overview; now: number; g
   const avgRating = rated.length ? (rated.reduce((s, b) => s + (b.rating ?? 0), 0) / rated.length).toFixed(1) : "—";
   const toVerify = suppliers.filter((s) => !s.verified);
   const openComplaints = complaints.filter((c) => c.status === "open");
+  const owing = suppliers.filter((s) => (s.feeBalance ?? 0) > 0);
   const waitingLong = bookings.filter((b) => b.status === "pending" && now - new Date(b.createdAt).getTime() > 30 * 60 * 1000);
 
   const byStatus = Object.keys(STATUS_LABELS).map((s) => ({ status: s, count: bookings.filter((b) => b.status === s).length }));
@@ -38,6 +39,7 @@ export function OverviewPage({ data, now, go }: { data: Overview; now: number; g
   const attention = [
     { count: toVerify.length, text: toVerify.length === 1 ? "supplier waiting for verification" : "suppliers waiting for verification", section: "suppliers" as const, icon: UserCheck },
     { count: openComplaints.length, text: openComplaints.length === 1 ? "open problem report" : "open problem reports", section: "complaints" as const, icon: MessageSquareWarning },
+    { count: owing.length, text: owing.length === 1 ? "supplier owes platform fees" : "suppliers owe platform fees", section: "money" as const, icon: HandCoins },
     { count: waitingLong.length, text: `${waitingLong.length === 1 ? "booking" : "bookings"} waiting over 30 min for a supplier`, section: "bookings" as const, icon: Hourglass },
   ].filter((a) => a.count > 0);
 
